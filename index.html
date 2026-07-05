@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Absensi Guru</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+</head>
+<body class="bg-gray-100 font-sans">
+
+    <div id="login-page" class="flex items-center justify-center min-h-screen">
+        <div class="bg-white p-8 rounded-lg shadow-md w-96">
+            <h2 class="text-2xl font-bold mb-6 text-center text-blue-600">Login Guru / Admin</h2>
+            <input type="text" id="username" placeholder="Username" class="w-full p-2 mb-4 border rounded">
+            <input type="password" id="password" placeholder="Password" class="w-full p-2 mb-6 border rounded">
+            <button onclick="handleLogin()" class="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700">Masuk</button>
+        </div>
+    </div>
+
+    <div id="dashboard-page" class="hidden min-h-screen flex flex-col">
+        <nav class="bg-blue-600 text-white p-4 flex justify-between items-center shadow">
+            <h1 class="text-xl font-bold">Absensi Guru Online</h1>
+            <div>
+                <span id="user-display" class="mr-4 font-semibold"></span>
+                <button onclick="logout()" class="bg-red-500 px-3 py-1 rounded hover:bg-red-600 text-sm">Keluar</button>
+            </div>
+        </nav>
+
+        <main class="flex-1 p-6 max-w-7xl w-full mx-auto grid grid-cols-1 md:grid-cols-3 gap-6">
+            
+            <div class="bg-white p-6 rounded-lg shadow space-y-6">
+                <h2 class="text-lg font-bold border-b pb-2">Melakukan Absensi</h2>
+                
+                <div class="bg-gray-50 p-4 rounded border text-center">
+                    <h3 class="font-semibold mb-2 text-sm text-gray-600">Metode 1: Scan QR Code</h3>
+                    <div id="reader" class="w-full rounded bg-black"></div>
+                    <button onclick="startQR()" class="mt-2 bg-indigo-600 text-white px-4 py-2 rounded text-sm w-full">Buka Kamera QR</button>
+                </div>
+
+                <div class="bg-gray-50 p-4 rounded border">
+                    <h3 class="font-semibold mb-2 text-sm text-gray-600 text-center">Metode 2: Absen Manual</h3>
+                    <button onclick="submitAbsen('Manual')" class="w-full bg-emerald-600 text-white py-2 rounded font-semibold hover:bg-emerald-700">
+                        Klik untuk Absen Masuk / Keluar
+                    </button>
+                </div>
+                
+                <div id="admin-section" class="hidden bg-yellow-50 p-4 rounded border border-yellow-200">
+                    <h3 class="font-bold text-sm text-yellow-800 mb-2">Menu Admin: Tambah Data Guru</h3>
+                    <input type="text" id="new-nip" placeholder="NIP / ID" class="w-full p-1.5 mb-2 border text-sm rounded bg-white">
+                    <input type="text" id="new-nama" placeholder="Nama Guru" class="w-full p-1.5 mb-2 border text-sm rounded bg-white">
+                    <input type="text" id="new-user" placeholder="Username" class="w-full p-1.5 mb-2 border text-sm rounded bg-white">
+                    <input type="password" id="new-pass" placeholder="Password" class="w-full p-1.5 mb-2 border text-sm rounded bg-white">
+                    <button onclick="inputGuru()" class="w-full bg-yellow-600 text-white py-1.5 rounded text-sm hover:bg-yellow-700">Simpan Data</button>
+                </div>
+            </div>
+
+            <div class="md:col-span-2 space-y-6">
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <h2 class="text-lg font-bold mb-4">Grafik Kehadiran Saya</h2>
+                    <div class="h-48 flex justify-center">
+                        <canvas id="chartKehadiran"></canvas>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <h2 class="text-lg font-bold mb-4">Laporan & Riwayat Absensi</h2>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm text-gray-500">
+                            <thead class="text-xs text-gray-700 uppercase bg-gray-100">
+                                <tr>
+                                    <th class="p-3">Tanggal</th>
+                                    <th class="p-3">Jam Masuk</th>
+                                    <th class="p-3">Jam Keluar</th>
+                                    <th class="p-3">Metode</th>
+                                    <th class="p-3">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabel-riwayat">
+                                </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // ISI DENGAN URL APPS SCRIPT ANDA YANG SUDAH DI-DEPLOY
+        const API_URL = "https://script.google.com/a/macros/guru.smp.belajar.id/s/AKfycbxXXkrbX3UHwmuLOHLbG8Loeab0tuBonKx79XNIY2Y9Kp0TNX3Da5bnwuN_vLhiKq3Wbw/exec"; 
+        
+        let currentUser = null;
+        let chartInstance = null;
+
+        function handleLogin() {
+            const user = document.getElementById('username').value;
+            const pass = document.getElementById('password').value;
+
+            fetch(API_URL, {
+                method: "POST",
+                body: JSON.stringify({ action: "login", username: user, password: pass })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.status === "success") {
+                    currentUser = data.user;
+                    document.getElementById('login-page').classList.add('hidden');
+                    document.getElementById('dashboard-page').classList.remove('hidden');
+                    document.getElementById('user-display').innerText = `Halo, ${currentUser.nama}`;
+                    
+                    if(currentUser.role === 'admin') {
+                        document.getElementById('admin-section').classList.remove('hidden');
+                    }
+                    
+                    loadDashboard();
+                } else {
+                    alert(data.message);
+                }
+            });
+        }
+
+        function loadDashboard() {
+            fetch(API_URL, {
+                method: "POST",
+                body: JSON.stringify({ action: "getDashboard", id_guru: currentUser.id_guru, role: currentUser.role })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.status === "success") {
+                    // Render Tabel Laporan
+                    const tbody = document.getElementById('tabel-riwayat');
+                    tbody.innerHTML = "";
+                    data.riwayat.forEach(row => {
+                        tbody.innerHTML += `
+                            <tr class="border-b bg-white">
+                                <td class="p-3 font-medium text-gray-900">${row.tanggal}</td>
+                                <td class="p-3 text-green-600 font-semibold">${row.masuk}</td>
+                                <td class="p-3 text-red-600 font-semibold">${row.keluar}</td>
+                                <td class="p-3">${row.metode}</td>
+                                <td class="p-3"><span class="px-2 py-1 rounded text-xs font-bold ${row.status === 'Hadir' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">${row.status}</span></td>
+                            </tr>`;
+                    });
+
+                    // Render Grafik
+                    renderChart(data.statistik);
+                }
+            });
+        }
+
+        function submitAbsen(metode) {
+            fetch(API_URL, {
+                method: "POST",
+                body: JSON.stringify({ action: "absensi", id_guru: currentUser.id_guru, metode: metode })
+            })
+            .then(res => res.json())
+            .then(data => {
+                alert(data.message);
+                loadDashboard();
+            });
+        }
+
+        function startQR() {
+            const html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 250 });
+            html5QrcodeScanner.render((decodedText) => {
+                // Asumsi QR code berisi teks verifikasi token sekolah, contoh: "ABSEN_SEKOLAH_A"
+                if(decodedText === "ABSEN_SEKOLAH_A") {
+                    html5QrcodeScanner.clear();
+                    submitAbsen("QR Code");
+                } else {
+                    alert("QR Code tidak valid!");
+                }
+            });
+        }
+
+        function inputGuru() {
+            const id = document.getElementById('new-nip').value;
+            const nama = document.getElementById('new-nama').value;
+            const user = document.getElementById('new-user').value;
+            const pass = document.getElementById('new-pass').value;
+
+            fetch(API_URL, {
+                method: "POST",
+                body: JSON.stringify({ action: "inputGuru", id_guru: id, nama: nama, username: user, password: pass })
+            })
+            .then(res => res.json())
+            .then(data => {
+                alert(data.message);
+                loadDashboard();
+            });
+        }
+
+        function renderChart(statistik) {
+            const ctx = document.getElementById('chartKehadiran').getContext('2d');
+            if (chartInstance) chartInstance.destroy();
+            
+            chartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Hadir', 'Terlambat', 'Izin'],
+                    datasets: [{
+                        data: [statistik.Hadir, statistik.Terlambat, statistik.Izin],
+                        backgroundColor: ['#10B981', '#F59E0B', '#EF4444']
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+        }
+
+        function logout() {
+            location.reload();
+        }
+    </script>
+</body>
+</html>
