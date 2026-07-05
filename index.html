@@ -125,7 +125,7 @@
 
   <script>
     // ⚠️ MASUKKAN URL WEB APP GOOGLE APPS SCRIPT ANDA DI SINI
-    const API_URL = "https://script.google.com/macros/s/AKfycbzLAeCPe9nDIxGT-4r-5_mRvUt36jElmg83LRgVGF-vWXFWHvcKwNpTEEXA9lSusGvWng/exec"; 
+    const API_URL = "https://script.google.com/macros/s/AKfycbyCQ1mZU1GsXvRgf6URS9MgqWRtTFcqANm5c7SmtC0H7vhluDTxZKNWm93AtgPgFNcCrg/exec"; 
     
     let currentUser = null;
     let myChart = null;
@@ -142,8 +142,12 @@
       btn.disabled = true;
       
       try {
+        // Menggunakan text/plain untuk melewati batasan CORS Preflight browser
         const response = await fetch(API_URL, {
           method: 'POST',
+          headers: {
+            'Content-Type': 'text/plain;charset=utf-8'
+          },
           body: JSON.stringify({ action: 'login', username: u, password: p })
         });
         const res = await response.json();
@@ -155,7 +159,7 @@
           alert(res.message);
         }
       } catch (err) {
-        alert("Gagal terhubung ke database Apps Script. Periksa URL API Anda.");
+        alert("Gagal terhubung ke database Apps Script. Pastikan URL API Anda sudah benar.");
       } finally {
         btn.innerText = "Masuk";
         btn.disabled = false;
@@ -210,6 +214,9 @@
       try {
         const response = await fetch(API_URL, {
           method: 'POST',
+          headers: {
+            'Content-Type': 'text/plain;charset=utf-8'
+          },
           body: JSON.stringify({ action: action, nip: nip, metode: metode })
         });
         const res = await response.json();
@@ -217,7 +224,7 @@
         document.getElementById('manual-nip').value = "";
         if(action === 'absen_masuk') switchTab('scan');
       } catch(err) {
-        alert("Gagal memproses absensi ke Google Sheet.");
+        alert("Gagal memproses data absensi ke Google Sheet.");
       }
     }
 
@@ -241,7 +248,7 @@
               <td class="p-2"><span class="px-2 py-1 rounded text-xs font-bold text-white ${row.status_kehadiran === 'Hadir' ? 'bg-green-500':'bg-amber-500'}">${row.status_kehadiran}</span></td>
             </tr>`;
         });
-      } catch(e) { body.innerHTML = "<tr><td colspan='6' class='p-4 text-red-500'>Gagal sinkronisasi data.</td></tr>"; }
+      } catch(e) { body.innerHTML = "<tr><td colspan='6' class='p-4 text-red-500'>Gagal sinkronisasi data laporan.</td></tr>"; }
     }
 
     async function muatGrafik() {
@@ -265,7 +272,7 @@
           },
           options: { responsive: true }
         });
-      } catch(e) { alert("Gagal memuat visualisasi grafik."); }
+      } catch(e) { alert("Gagal memuat visualisasi grafik statistik."); }
     }
 
     async function tambahGuru() {
@@ -278,6 +285,9 @@
       try {
         const response = await fetch(API_URL, {
           method: 'POST',
+          headers: {
+            'Content-Type': 'text/plain;charset=utf-8'
+          },
           body: JSON.stringify({ action: 'tambah_guru', nip: nip, nama: nama, jabatan: jabatan })
         });
         const res = await response.json();
@@ -302,12 +312,11 @@
         const feedBody = document.getElementById('live-feed-body');
         feedBody.innerHTML = "";
         
-        // Menggunakan waktu lokal WIB/Jakarta saat memfilter tanggal hari ini
         const hariIni = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Jakarta' });
         const dataHariIni = dataLap.filter(r => r.tanggal === hariIni);
 
         if(dataHariIni.length === 0) {
-          feedBody.innerHTML = "<tr><td colspan='3' class='p-4 text-gray-400 italic'>Belum ada aktivitas presensi masuk dari guru hari ini.</td></tr>";
+          feedBody.innerHTML = "<tr><td colspan='3' class='p-4 text-gray-400 italic'>Belum ada aktivitas presensi masuk hari ini.</td></tr>";
           return;
         }
 
@@ -319,10 +328,10 @@
               <td class="p-2"><span class="font-bold text-sm ${row.status_kehadiran === 'Hadir' ? 'text-green-600':'text-amber-600'}">${row.status_kehadiran}</span></td>
             </tr>`;
         });
-      } catch (e) { console.log("Mentoring data fetch issue."); }
+      } catch (e) { console.log("Gagal memuat monitoring data live."); }
     }
 
     function logout() { location.reload(); }
   </script>
 </body>
-</html> 
+</html>
