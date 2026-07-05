@@ -125,7 +125,7 @@
 
   <script>
     // ⚠️ MASUKKAN URL WEB APP GOOGLE APPS SCRIPT ANDA DI SINI
-    const API_URL = "https://script.google.com/macros/s/AKfycbyCQ1mZU1GsXvRgf6URS9MgqWRtTFcqANm5c7SmtC0H7vhluDTxZKNWm93AtgPgFNcCrg/exec"; 
+    const API_URL = "https://script.google.com/macros/s/AKfycbx-XYPEH3BKNarPZXVxCbL0S0W31RMv0x_cKxhfMGEwe1hJhqwigdffwWbdrytWVj_Amw/exec"; 
     
     let currentUser = null;
     let myChart = null;
@@ -142,14 +142,21 @@
       btn.disabled = true;
       
       try {
-        // Menggunakan text/plain untuk melewati batasan CORS Preflight browser
+        // Solusi Utama: Mengirim data sebagai form URL encoded untuk mengantisipasi blokir CORS Redirect oleh browser
+        const formData = new URLSearchParams();
+        formData.append('action', 'login');
+        formData.append('username', u);
+        formData.append('password', p);
+
         const response = await fetch(API_URL, {
           method: 'POST',
+          mode: 'cors',
           headers: {
-            'Content-Type': 'text/plain;charset=utf-8'
+            'Content-Type': 'application/x-www-form-urlencoded'
           },
-          body: JSON.stringify({ action: 'login', username: u, password: p })
+          body: formData.toString()
         });
+        
         const res = await response.json();
         
         if (res.status === "success") {
@@ -159,7 +166,8 @@
           alert(res.message);
         }
       } catch (err) {
-        alert("Gagal terhubung ke database Apps Script. Pastikan URL API Anda sudah benar.");
+        alert("Gagal sinkronisasi database. Pastikan URL Script Anda valid dan telah di-deploy publik.");
+        console.error(err);
       } finally {
         btn.innerText = "Masuk";
         btn.disabled = false;
@@ -212,12 +220,18 @@
 
     async function kirimAbsen(nip, action, metode) {
       try {
+        const formData = new URLSearchParams();
+        formData.append('action', action);
+        formData.append('nip', nip);
+        formData.append('metode', metode);
+
         const response = await fetch(API_URL, {
           method: 'POST',
+          mode: 'cors',
           headers: {
-            'Content-Type': 'text/plain;charset=utf-8'
+            'Content-Type': 'application/x-www-form-urlencoded'
           },
-          body: JSON.stringify({ action: action, nip: nip, metode: metode })
+          body: formData.toString()
         });
         const res = await response.json();
         alert(res.message);
@@ -283,12 +297,19 @@
       if(!nip || !nama || !jabatan) return alert("Semua bidang data guru wajib diisi!");
       
       try {
+        const formData = new URLSearchParams();
+        formData.append('action', 'tambah_guru');
+        formData.append('nip', nip);
+        formData.append('nama', nama);
+        formData.append('jabatan', jabatan);
+
         const response = await fetch(API_URL, {
           method: 'POST',
+          mode: 'cors',
           headers: {
-            'Content-Type': 'text/plain;charset=utf-8'
+            'Content-Type': 'application/x-www-form-urlencoded'
           },
-          body: JSON.stringify({ action: 'tambah_guru', nip: nip, nama: nama, jabatan: jabatan })
+          body: formData.toString()
         });
         const res = await response.json();
         alert(res.message);
