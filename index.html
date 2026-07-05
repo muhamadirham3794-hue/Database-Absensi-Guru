@@ -1,253 +1,165 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Monitoring & Absensi Guru</title>
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://unpkg.com/html5-qrcode"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistem Presensi Guru</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://unpkg.com/html5-qrcode"></script>
 </head>
 <body class="bg-gray-100 font-sans">
 
-    <div id="login-page" class="flex items-center justify-center min-h-screen">
-        <div class="bg-white p-8 rounded-lg shadow-md w-96">
-            <h2 class="text-2xl font-bold mb-2 text-center text-blue-600">Sistem Absensi</h2>
-            <p class="text-center text-xs text-gray-500 mb-6">Khusus Admin Piket & Kepala Sekolah</p>
-            <input type="text" id="username" placeholder="Username" class="w-full p-2 mb-4 border rounded">
-            <input type="password" id="password" placeholder="Password" class="w-full p-2 mb-6 border rounded">
-            <button onclick="handleLogin()" class="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700">Masuk</button>
+  <div id="login-page" class="flex h-screen items-center justify-center">
+    <div class="w-full max-w-md bg-white p-8 rounded-lg shadow-md">
+      <h2 class="text-2xl font-bold text-center text-gray-800 mb-6">Login E-Absen Guru</h2>
+      <div class="mb-4">
+        <label class="block text-gray-700">Username</label>
+        <input type="text" id="username" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring shadow-sm">
+      </div>
+      <div class="mb-6">
+        <label class="block text-gray-700">Password</label>
+        <input type="password" id="password" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring shadow-sm">
+      </div>
+      <button onclick="handleLogin()" class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition">Masuk</button>
+    </div>
+  </div>
+
+  <div id="main-app" class="hidden min-h-screen flex flex-col">
+    <nav class="bg-blue-600 text-white p-4 flex justify-between items-center shadow-md">
+      <h1 class="text-xl font-bold">E-Absen SMAN 1 Dashboard (<span id="user-role">Role</span>)</h1>
+      <button onclick="logout()" class="bg-red-500 px-4 py-2 rounded hover:bg-red-600 transition">Keluar</button>
+    </nav>
+
+    <div class="flex flex-1">
+      <aside class="w-64 bg-white shadow-md p-4 space-y-2">
+        <div id="menu-admin" class="hidden space-y-2">
+          <button onclick="switchTab('scan')" class="w-full text-left p-3 hover:bg-blue-50 rounded font-medium">📷 Scan QR & Manual</button>
+          <button onclick="switchTab('laporan')" class="w-full text-left p-3 hover:bg-blue-50 rounded font-medium">📊 Laporan Presensi</button>
+          <button onclick="switchTab('input-guru')" class="w-full text-left p-3 hover:bg-blue-50 rounded font-medium">👤 Input Data Guru</button>
+          <button onclick="switchTab('grafik')" class="w-full text-left p-3 hover:bg-blue-50 rounded font-medium">📈 Grafik Statistik</button>
+          <button onclick="switchTab('pengaturan')" class="w-full text-left p-3 hover:bg-blue-50 rounded font-medium">⚙️ Jam Masuk / Keluar</button>
         </div>
-    </div>
+        <div id="menu-kepsek" class="hidden space-y-2">
+          <button onclick="switchTab('monitoring')" class="w-full text-left p-3 hover:bg-green-50 rounded font-medium text-green-700">👁️ Real-time Mentoring</button>
+          <button onclick="switchTab('grafik')" class="w-full text-left p-3 hover:bg-green-50 rounded font-medium text-green-700">📈 Lihat Grafik Sekolah</button>
+        </div>
+      </aside>
 
-    <div id="dashboard-page" class="hidden min-h-screen flex flex-col">
-        <nav class="bg-blue-600 text-white p-4 flex justify-between items-center shadow">
-            <h1 class="text-xl font-bold">Panel Absensi Guru</h1>
-            <div>
-                <span id="user-display" class="mr-4 font-semibold"></span>
-                <button onclick="logout()" class="bg-red-500 px-3 py-1 rounded hover:bg-red-600 text-sm">Keluar</button>
-            </div>
-        </nav>
-
-        <main class="flex-1 p-6 max-w-7xl w-full mx-auto">
-            
-            <div id="main-layout" class="grid grid-cols-1 gap-6">
-                
-                <div id="admin-panel" class="hidden bg-white p-6 rounded-lg shadow space-y-6">
-                    <h2 class="text-lg font-bold border-b pb-2 text-blue-600">Konsol Operator Admin Piket</h2>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div class="bg-gray-50 p-4 rounded border text-center">
-                            <h3 class="font-semibold mb-2 text-sm text-gray-600">Scan QR Kartu Guru</h3>
-                            <div id="reader" class="w-full rounded bg-black"></div>
-                            <button onclick="startQR()" class="mt-2 bg-indigo-600 text-white px-4 py-2 rounded text-sm w-full">Buka Kamera Scan</button>
-                        </div>
-
-                        <div class="bg-gray-50 p-4 rounded border flex flex-col justify-between">
-                            <div>
-                                <h3 class="font-semibold mb-2 text-sm text-gray-600">Absen Manual Guru</h3>
-                                <select id="select-guru" class="w-full p-2 mb-3 border rounded bg-white text-sm"></select>
-                            </div>
-                            <button onclick="submitAbsenManual()" class="w-full bg-emerald-600 text-white py-2 rounded font-semibold text-sm hover:bg-emerald-700">
-                                Eksekusi Absen (Masuk/Keluar)
-                            </button>
-                        </div>
-                        
-                        <div class="bg-yellow-50 p-4 rounded border border-yellow-200 flex flex-col justify-between">
-                            <div>
-                                <h3 class="font-bold text-sm text-yellow-800 mb-2">Registrasi Guru Baru</h3>
-                                <input type="text" id="new-nip" placeholder="NIP / ID Guru" class="w-full p-1.5 mb-2 border text-sm rounded bg-white">
-                                <input type="text" id="new-nama" placeholder="Nama Lengkap & Gelar" class="w-full p-1.5 mb-2 border text-sm rounded bg-white">
-                            </div>
-                            <button onclick="inputGuru()" class="w-full bg-yellow-600 text-white py-1.5 rounded text-sm hover:bg-yellow-700">Simpan Ke Database</button>
-                        </div>
-                    </div>
-                </div>
-
-                <div id="monitoring-panel" class="space-y-6">
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div class="bg-white p-6 rounded-lg shadow md:col-span-1">
-                            <h2 class="text-sm font-bold mb-4 text-gray-700 uppercase">Grafik Kehadiran Hari Ini</h2>
-                            <div class="h-40 flex justify-center">
-                                <canvas id="chartKehadiran"></canvas>
-                            </div>
-                        </div>
-                        
-                        <div class="bg-white p-6 rounded-lg shadow md:col-span-2 flex flex-col justify-center bg-blue-50 border border-blue-100">
-                            <h3 class="text-sm font-semibold text-blue-800 mb-1">Status Environtment Anda:</h3>
-                            <p id="role-status" class="text-2xl font-bold text-blue-900 uppercase">MENTORING MODE</p>
-                            <p id="role-desc" class="text-xs text-gray-500 mt-2">Menampilkan data monitoring sekolah secara real-time.</p>
-                        </div>
-                    </div>
-
-                    <div class="bg-white p-6 rounded-lg shadow">
-                        <h2 class="text-lg font-bold mb-4 text-gray-700">Laporan Rekapitulasi Kehadiran Seluruh Guru</h2>
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-left text-sm text-gray-500">
-                                <thead class="text-xs text-gray-700 uppercase bg-gray-100">
-                                    <tr>
-                                        <th class="p-3">Nama Guru</th>
-                                        <th class="p-3">Tanggal</th>
-                                        <th class="p-3">Jam Masuk</th>
-                                        <th class="p-3">Jam Keluar</th>
-                                        <th class="p-3">Metode</th>
-                                        <th class="p-3">Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="tabel-riwayat"></tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                </div>
-
-            </div>
-        </main>
-    </div>
-
-    <script>
-        // MASUKKAN URL GOOGLE APPS SCRIPT WEB APP ANDA DI SINI
-        const API_URL = "https://script.google.com/macros/s/AKfycby-VZwPgg7aXdJ94yzmk-axr9fKkENJPMm7Nk1yxd3JM2ZDiHZp2tqHtL9hjiWx5-jweA/exec"; 
+      <main class="flex-1 p-6">
         
-        let currentUser = null;
-        let chartInstance = null;
+        <section id="tab-scan" class="tab-content hidden space-y-6">
+          <div class="bg-white p-6 rounded-lg shadow-md">
+            <h3 class="text-xl font-bold mb-4">Metode 1: Scan QR Code</h3>
+            <div id="reader" class="mx-auto" style="width:300px;"></div>
+          </div>
+          <div class="bg-white p-6 rounded-lg shadow-md">
+            <h3 class="text-xl font-bold mb-4">Metode 2: Input Manual (Alternatif)</h3>
+            <input type="text" id="manual-nip" placeholder="Masukkan NIP Guru" class="border p-2 rounded mr-2">
+            <button onclick="absenManual('masuk')" class="bg-green-600 text-white px-4 py-2 rounded">Absen Masuk</button>
+            <button onclick="absenManual('keluar')" class="bg-yellow-600 text-white px-4 py-2 rounded">Absen Keluar</button>
+          </div>
+        </section>
 
-        function callAPI(payload) {
-            return fetch(API_URL, {
-                method: "POST",
-                mode: "cors",
-                headers: { "Content-Type": "text/plain;charset=utf-8" },
-                body: JSON.stringify(payload)
-            }).then(res => res.json());
-        }
+        <section id="tab-laporan" class="tab-content hidden bg-white p-6 rounded-lg shadow-md">
+          <div class="flex justify-between items-center mb-4">
+            <h3 class="text-xl font-bold">Laporan Kehadiran Guru</h3>
+            <button onclick="exportToExcel()" class="bg-emerald-600 text-white px-4 py-2 rounded">Unduh Excel</button>
+          </div>
+          <table class="w-full table-auto border-collapse border border-gray-200">
+            <thead>
+              <tr class="bg-gray-100">
+                <th class="border p-2">NIP</th><th class="border p-2">Nama</th><th class="border p-2">Tanggal</th><th class="border p-2">Masuk</th><th class="border p-2">Keluar</th><th class="border p-2">Status</th>
+              </tr>
+            </thead>
+            <tbody id="tabel-laporan-body"></tbody>
+          </table>
+        </section>
 
-        function handleLogin() {
-            const user = document.getElementById('username').value;
-            const pass = document.getElementById('password').value;
+        <section id="tab-grafik" class="tab-content hidden bg-white p-6 rounded-lg shadow-md">
+          <h3 class="text-xl font-bold mb-4">Statistik Kehadiran Hari Ini</h3>
+          <div style="max-width: 400px;" class="mx-auto">
+            <canvas id="chartKehadiran"></canvas>
+          </div>
+        </section>
 
-            callAPI({ action: "login", username: user, password: pass })
-            .then(data => {
-                if(data.status === "success") {
-                    currentUser = data.user;
-                    document.getElementById('login-page').classList.add('hidden');
-                    document.getElementById('dashboard-page').classList.remove('hidden');
-                    document.getElementById('user-display').innerText = `User: ${currentUser.nama}`;
-                    
-                    const adminPanel = document.getElementById('admin-panel');
-                    const roleStatus = document.getElementById('role-status');
-                    const roleDesc = document.getElementById('role-desc');
+        <section id="tab-input-guru" class="tab-content hidden bg-white p-6 rounded-lg shadow-md">
+          <h3 class="text-xl font-bold mb-4">Tambah Data Guru Baru</h3>
+          </section>
 
-                    if(currentUser.role === 'admin') {
-                        // Jika ADMIN login
-                        adminPanel.classList.remove('hidden'); // Memunculkan panel atas mesin absen
-                        roleStatus.innerText = "ADMIN MODE (OPERATOR PIKET)";
-                        roleDesc.innerText = "Anda masuk sebagai Admin Operator. Anda memiliki wewenang penuh melakukan scanning kartu QR guru, mengabsen manual, serta mendaftarkan guru baru.";
-                        loadDaftarGuru();
-                    } else {
-                        // Jika KEPSEK login
-                        adminPanel.classList.add('hidden'); // Menghilangkan & menghancurkan layout panel absen total
-                        roleStatus.innerText = "MENTORING MODE (KEPALA SEKOLAH)";
-                        roleDesc.innerText = "Anda masuk dalam mode Kepala Sekolah. Anda memegang kendali pengawasan, mentoring grafik, serta evaluasi data rekapitulasi presensi guru tanpa opsi manipulasi data.";
-                    }
-                    loadDashboard();
-                } else {
-                    alert(data.message);
-                }
-            }).catch(err => {
-                alert("Gagal terhubung ke server. Pastikan URL Apps Script sudah benar.");
-            });
-        }
+        <section id="tab-pengaturan" class="tab-content hidden bg-white p-6 rounded-lg shadow-md">
+          <h3 class="text-xl font-bold mb-4">Konfigurasi Jam Operasional Kerja</h3>
+          </section>
 
-        function loadDaftarGuru() {
-            callAPI({ action: "getDaftarGuru" }).then(data => {
-                if(data.status === "success") {
-                    const select = document.getElementById('select-guru');
-                    select.innerHTML = "";
-                    data.daftarGuru.forEach(g => {
-                        select.innerHTML += `<option value="${g.id_guru}">${g.nama}</option>`;
-                    });
-                }
-            });
-        }
+        <section id="tab-monitoring" class="tab-content hidden space-y-6">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="bg-green-100 p-4 rounded-lg shadow"><h4 class="text-sm font-bold">Hadir Tepat Waktu</h4><p id="m-hadir" class="text-2xl font-black text-green-700">0</p></div>
+            <div class="bg-red-100 p-4 rounded-lg shadow"><h4 class="text-sm font-bold">Terlambat</h4><p id="m-telat" class="text-2xl font-black text-red-700">0</p></div>
+            <div class="bg-gray-100 p-4 rounded-lg shadow"><h4 class="text-sm font-bold">Belum Absen/Alpa</h4><p id="m-alpa" class="text-2xl font-black text-gray-700">0</p></div>
+          </div>
+          <div class="bg-white p-6 rounded-lg shadow-md">
+            <h3 class="text-xl font-bold text-green-800 mb-2">📋 Live Feed Kehadiran (Mentoring Monitor)</h3>
+            <p class="text-sm text-gray-500 mb-4">Halaman ini diperbarui otomatis untuk memantau kedisiplinan guru hari ini secara berkala.</p>
+            <div id="live-feed-container" class="space-y-2">
+              </div>
+          </div>
+        </section>
 
-        function loadDashboard() {
-            callAPI({ action: "getDashboard", role: currentUser.role })
-            .then(data => {
-                if(data.status === "success") {
-                    const tbody = document.getElementById('tabel-riwayat');
-                    tbody.innerHTML = "";
-                    data.riwayat.forEach(row => {
-                        tbody.innerHTML += `
-                            <tr class="border-b bg-white hover:bg-gray-50">
-                                <td class="p-3 font-semibold text-gray-800">${row.nama}</td>
-                                <td class="p-3 text-gray-600">${row.tanggal}</td>
-                                <td class="p-3 text-green-600 font-semibold">${row.masuk}</td>
-                                <td class="p-3 text-red-600 font-semibold">${row.keluar}</td>
-                                <td class="p-3 text-xs text-gray-400">${row.metode}</td>
-                                <td class="p-3"><span class="px-2 py-1 rounded text-xs font-bold ${row.status === 'Hadir' ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'}">${row.status}</span></td>
-                            </tr>`;
-                    });
-                    renderChart(data.statistik);
-                }
-            });
-        }
+      </main>
+    </div>
+  </div>
 
-        function submitAbsenManual() {
-            const idGuru = document.getElementById('select-guru').value;
-            if(!idGuru) return alert("Pilih guru terlebih dahulu!");
-            executeAbsen(idGuru, "Manual oleh Admin");
-        }
+  <script>
+    const API_URL = "https://script.google.com/macros/s/AKfycbwxj6pwGQ7a3R_nqb66YqLToXT8-w7FFUCn3cod9DoQq0s_Se-45wA-gpnrioBxf70obQ/exec";
+    let currentUser = null;
 
-        function executeAbsen(idGuru, metode) {
-            callAPI({ action: "absensi", id_guru: idGuru, metode: metode })
-            .then(data => {
-                alert(data.message);
-                loadDashboard();
-            });
-        }
+    function handleLogin() {
+      // Logika fetch API POST ke Apps Script untuk validasi user
+      // Jika sukses, ubah currentUser, panggil showDashboard()
+      // Dummy contoh untuk visualisasi:
+      const u = document.getElementById('username').value;
+      if(u === 'admin' || u === 'kepsek') {
+        currentUser = { role: u, nama: u.toUpperCase() };
+        showDashboard();
+      }
+    }
 
-        function startQR() {
-            const html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 250 });
-            html5QrcodeScanner.render((decodedText) => {
-                html5QrcodeScanner.clear();
-                executeAbsen(decodedText, "QR Code (Admin Scan)");
-            });
-        }
+    function showDashboard() {
+      document.getElementById('login-page').classList.add('hidden');
+      document.getElementById('main-app').classList.remove('hidden');
+      document.getElementById('user-role').innerText = currentUser.nama;
+      
+      if(currentUser.role === 'admin') {
+        document.getElementById('menu-admin').classList.remove('hidden');
+        switchTab('scan');
+      } else {
+        document.getElementById('menu-kepsek').classList.remove('hidden');
+        switchTab('monitoring');
+        initMentoring();
+      }
+    }
 
-        function inputGuru() {
-            const id = document.getElementById('new-nip').value;
-            const nama = document.getElementById('new-nama').value;
-            if(!id || !nama) return alert("Isi semua data guru baru!");
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+      document.getElementById('tab-' + tabId).classList.remove('hidden');
+      if(tabId === 'scan' && currentUser.role === 'admin') { startQRScanner(); }
+    }
 
-            callAPI({ action: "inputGuru", id_guru: id, nama: nama })
-            .then(data => {
-                alert(data.message);
-                document.getElementById('new-nip').value = "";
-                document.getElementById('new-nama').value = "";
-                loadDaftarGuru();
-                loadDashboard();
-            });
-        }
+    function startQRScanner() {
+      let html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 250 });
+      html5QrcodeScanner.render((decodedText) => {
+         // decodedText diasumsikan berisi NIP Guru
+         alert("QR Code Terdeteksi: " + decodedText);
+         // Panggil fungsi kirim data absen ke backend API_URL
+      });
+    }
 
-        function renderChart(statistik) {
-            const ctx = document.getElementById('chartKehadiran').getContext('2d');
-            if (chartInstance) chartInstance.destroy();
-            
-            chartInstance = new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Hadir', 'Terlambat', 'Izin'],
-                    datasets: [{
-                        data: [statistik.Hadir, statistik.Terlambat, statistik.Izin],
-                        backgroundColor: ['#10B981', '#F59E0B', '#EF4444']
-                    }]
-                },
-                options: { responsive: true, maintainAspectRatio: false }
-            });
-        }
+    function initMentoring() {
+      // Ambil data dashboard stats (GET) dari Apps Script
+      // Render data realtime feed guru ke div#live-feed-container
+    }
 
-        function logout() { location.reload(); }
-    </script>
+    function logout() { location.reload(); }
+  </script>
 </body>
 </html>
