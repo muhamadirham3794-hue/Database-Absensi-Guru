@@ -15,344 +15,217 @@
       <h2 class="text-2xl font-bold text-center text-gray-800 mb-6">Login E-Absen Guru</h2>
       <div class="mb-4">
         <label class="block text-gray-700 font-semibold mb-1">Username</label>
-        <input type="text" id="username" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:ring-blue-200 shadow-sm text-black">
+        <input type="text" id="username" class="w-full px-3 py-2 border rounded-lg text-black">
       </div>
       <div class="mb-6">
         <label class="block text-gray-700 font-semibold mb-1">Password</label>
-        <input type="password" id="password" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:ring-blue-200 shadow-sm text-black">
+        <input type="password" id="password" class="w-full px-3 py-2 border rounded-lg text-black">
       </div>
-      <button onclick="handleLogin()" id="btn-login" class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition font-bold">Masuk</button>
+      <button onclick="eksekusiLogin()" id="btn-login" class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 font-bold">Masuk</button>
     </div>
   </div>
 
   <div id="main-app" class="hidden min-h-screen flex flex-col">
     <nav class="bg-blue-600 text-white p-4 flex justify-between items-center shadow-md">
-      <h1 class="text-xl font-bold">E-Absen Dashboard (<span id="user-role">Role</span>)</h1>
-      <button onclick="logout()" class="bg-red-500 px-4 py-2 rounded font-bold hover:bg-red-600 transition">Keluar</button>
+      <h1 class="text-xl font-bold">E-Absen (<span id="user-role">Guru</span>)</h1>
+      <button onclick="location.reload()" class="bg-red-500 px-4 py-2 rounded font-bold">Keluar</button>
     </nav>
 
     <div class="flex flex-1 flex-col md:flex-row">
       <aside class="w-full md:w-64 bg-white shadow-md p-4 space-y-2">
         <div id="menu-admin" class="hidden space-y-2">
-          <button onclick="switchTab('scan')" class="w-full text-left p-3 hover:bg-blue-50 rounded font-medium">📷 Scan QR & Manual</button>
-          <button onclick="switchTab('laporan')" class="w-full text-left p-3 hover:bg-blue-50 rounded font-medium">📊 Laporan Presensi</button>
-          <button onclick="switchTab('input-guru')" class="w-full text-left p-3 hover:bg-blue-50 rounded font-medium">👤 Input Data Guru</button>
-          <button onclick="switchTab('grafik')" class="w-full text-left p-3 hover:bg-blue-50 rounded font-medium">📈 Grafik Statistik</button>
+          <button onclick="gantiTab('scan')" class="w-full text-left p-3 hover:bg-blue-50 rounded">📷 Scan QR & Manual</button>
+          <button onclick="gantiTab('laporan')" class="w-full text-left p-3 hover:bg-blue-50 rounded">📊 Laporan Presensi</button>
+          <button onclick="gantiTab('input-guru')" class="w-full text-left p-3 hover:bg-blue-50 rounded">👤 Input Data Guru</button>
+          <button onclick="gantiTab('grafik')" class="w-full text-left p-3 hover:bg-blue-50 rounded">📈 Grafik Statistik</button>
         </div>
         <div id="menu-kepsek" class="hidden space-y-2">
-          <button onclick="switchTab('monitoring')" class="w-full text-left p-3 hover:bg-green-50 rounded font-medium text-green-700">👁️ Real-time Mentoring</button>
-          <button onclick="switchTab('grafik')" class="w-full text-left p-3 hover:bg-green-50 rounded font-medium text-green-700">📈 Lihat Grafik Sekolah</button>
+          <button onclick="gantiTab('monitoring')" class="w-full text-left p-3 hover:bg-green-50 rounded text-green-700">👁️ Real-time Monitoring</button>
+          <button onclick="gantiTab('grafik')" class="w-full text-left p-3 hover:bg-green-50 rounded text-green-700">📈 Lihat Grafik Sekolah</button>
         </div>
       </aside>
 
       <main class="flex-1 p-6">
-        
         <section id="tab-scan" class="tab-content hidden space-y-6">
-          <div class="bg-white p-6 rounded-lg shadow-md">
-            <h3 class="text-xl font-bold mb-4 text-gray-800">Metode 1: Scan QR Code</h3>
-            <div id="reader" class="mx-auto border border-gray-300 rounded" style="width:300px;"></div>
-          </div>
-          <div class="bg-white p-6 rounded-lg shadow-md">
-            <h3 class="text-xl font-bold mb-4 text-gray-800">Metode 2: Input Manual</h3>
-            <div class="flex flex-wrap gap-2">
-              <input type="text" id="manual-nip" placeholder="Masukkan NIP Guru" class="border p-2 rounded text-black focus:outline-none focus:ring w-full sm:w-auto">
-              <button onclick="prosesAbsen('absen_masuk')" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 font-semibold transition">Absen Masuk</button>
-              <button onclick="prosesAbsen('absen_keluar')" class="bg-yellow-600 text-white px-4 py-2 rounded hover:bg-yellow-700 font-semibold transition">Absen Keluar</button>
+          <div class="bg-white p-6 rounded-lg shadow"><div id="reader" class="mx-auto" style="width:300px;"></div></div>
+          <div class="bg-white p-6 rounded-lg shadow">
+            <h3 class="text-lg font-bold mb-3">Input Manual NIP</h3>
+            <div class="flex gap-2">
+              <input type="text" id="manual-nip" placeholder="Masukkan NIP" class="border p-2 rounded text-black flex-1">
+              <button onclick="kirimAbsensi('absen_masuk')" class="bg-green-600 text-white px-4 py-2 rounded">Masuk</button>
+              <button onclick="kirimAbsensi('absen_keluar')" class="bg-yellow-600 text-white px-4 py-2 rounded">Keluar</button>
             </div>
           </div>
         </section>
 
-        <section id="tab-laporan" class="tab-content hidden bg-white p-6 rounded-lg shadow-md">
-          <h3 class="text-xl font-bold mb-4 text-gray-800">Laporan Kehadiran Guru</h3>
-          <div class="overflow-x-auto">
-            <table class="w-full table-auto border-collapse border border-gray-200">
-              <thead>
-                <tr class="bg-gray-100 text-gray-700">
-                  <th class="border p-2">NIP</th>
-                  <th class="border p-2">Nama</th>
-                  <th class="border p-2">Tanggal</th>
-                  <th class="border p-2">Masuk</th>
-                  <th class="border p-2">Keluar</th>
-                  <th class="border p-2">Status</th>
-                </tr>
-              </thead>
-              <tbody id="tabel-laporan-body" class="text-center text-gray-600"></tbody>
+        <section id="tab-laporan" class="tab-content hidden bg-white p-6 rounded-lg shadow">
+          <table class="w-full text-center border">
+            <thead><tr class="bg-gray-100"><th>NIP</th><th>Nama</th><th>Tanggal</th><th>Masuk</th><th>Keluar</th><th>Status</th></tr></thead>
+            <tbody id="tabel-body"></tbody>
+          </table>
+        </section>
+
+        <section id="tab-grafik" class="tab-content hidden bg-white p-6 rounded-lg shadow">
+          <div style="max-width:300px;" class="mx-auto"><canvas id="chartKehadiran"></canvas></div>
+        </section>
+
+        <section id="tab-input-guru" class="tab-content hidden bg-white p-6 rounded-lg shadow space-y-3 max-w-sm">
+          <input type="text" id="g-nip" placeholder="NIP" class="w-full border p-2 rounded text-black">
+          <input type="text" id="g-nama" placeholder="Nama" class="w-full border p-2 rounded text-black">
+          <input type="text" id="g-jabatan" placeholder="Jabatan" class="w-full border p-2 rounded text-black">
+          <button onclick="simpanGuru()" class="bg-blue-600 text-white w-full py-2 rounded shadow">Simpan Guru</button>
+        </section>
+
+        <section id="tab-monitoring" class="tab-content hidden space-y-4">
+          <div class="grid grid-cols-3 gap-4 text-center">
+            <div class="bg-green-100 p-3 rounded"><h5>Total Guru</h5><p id="m-total" class="text-xl font-bold">0</p></div>
+            <div class="bg-blue-100 p-3 rounded"><h5>Hadir</h5><p id="m-hadir" class="text-xl font-bold">0</p></div>
+            <div class="bg-red-100 p-3 rounded"><h5>Telat</h5><p id="m-telat" class="text-xl font-bold">0</p></div>
+          </div>
+          <div class="bg-white p-4 rounded shadow">
+            <table class="w-full text-center border">
+              <thead><tr class="bg-gray-50"><th>Nama Guru</th><th>Jam Masuk</th><th>Status</th></tr></thead>
+              <tbody id="live-body"></tbody>
             </table>
           </div>
         </section>
-
-        <section id="tab-grafik" class="tab-content hidden bg-white p-6 rounded-lg shadow-md">
-          <h3 class="text-xl font-bold mb-4 text-gray-800">Statistik Kehadiran Hari Ini</h3>
-          <div style="max-width: 320px;" class="mx-auto">
-            <canvas id="chartKehadiran"></canvas>
-          </div>
-        </section>
-
-        <section id="tab-input-guru" class="tab-content hidden bg-white p-6 rounded-lg shadow-md">
-          <h3 class="text-xl font-bold mb-4 text-gray-800">Tambah Data Guru Baru</h3>
-          <div class="space-y-4 max-w-md">
-            <div><label class="block text-gray-700 font-medium mb-1">NIP</label><input type="text" id="guru-nip" class="w-full border p-2 rounded text-black"></div>
-            <div><label class="block text-gray-700 font-medium mb-1">Nama Guru</label><input type="text" id="guru-nama" class="w-full border p-2 rounded text-black"></div>
-            <div><label class="block text-gray-700 font-medium mb-1">Jabatan</label><input type="text" id="guru-jabatan" class="w-full border p-2 rounded text-black"></div>
-            <button onclick="tambahGuru()" class="bg-blue-600 text-white px-5 py-2 rounded font-semibold hover:bg-blue-700 transition">Simpan Data Guru</button>
-          </div>
-        </section>
-
-        <section id="tab-monitoring" class="tab-content hidden space-y-6">
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div class="bg-green-100 p-4 rounded-lg shadow"><h4 class="text-sm font-bold text-green-800">Total Guru Aktif</h4><p id="m-total" class="text-2xl font-black text-green-700">0</p></div>
-            <div class="bg-blue-100 p-4 rounded-lg shadow"><h4 class="text-sm font-bold text-blue-800">Hadir Tepat Waktu</h4><p id="m-hadir" class="text-2xl font-black text-blue-700">0</p></div>
-            <div class="bg-amber-100 p-4 rounded-lg shadow"><h4 class="text-sm font-bold text-amber-800">Terlambat</h4><p id="m-telat" class="text-2xl font-black text-amber-700">0</p></div>
-          </div>
-          <div class="bg-white p-6 rounded-lg shadow-md">
-            <h3 class="text-xl font-bold text-green-800 mb-4">📋 Live Monitor Kehadiran Guru</h3>
-            <div class="overflow-x-auto">
-              <table class="w-full table-auto border-collapse border border-gray-200">
-                <thead>
-                  <tr class="bg-gray-100 text-gray-700">
-                    <th class="border p-2">Nama Guru</th><th class="border p-2">Jam Masuk</th><th class="border p-2">Status</th>
-                  </tr>
-                </thead>
-                <tbody id="live-feed-body" class="text-center text-gray-600"></tbody>
-              </table>
-            </div>
-          </div>
-        </section>
-
       </main>
     </div>
   </div>
 
   <script>
-    // ⚠️ MASUKKAN URL WEB APP GOOGLE APPS SCRIPT ANDA DI SINI
-    const API_URL = "https://script.google.com/macros/s/AKfycbx-XYPEH3BKNarPZXVxCbL0S0W31RMv0x_cKxhfMGEwe1hJhqwigdffwWbdrytWVj_Amw/exec"; 
-    
-    let currentUser = null;
-    let myChart = null;
-    let html5QrcodeScanner = null;
+    // ⚠️ PASTE URL SCRIPT GOOGLE KAMU DI SINI
+    const API_URL = "https://script.google.com/macros/s/AKfycbxGBZ4O-_uM--BxqaNfTZc9ezUw5MzvtX7bB7NpeD38Ms_BH68AbKVek8Q-O8b6QHNEog/exec"; 
 
-    async function handleLogin() {
+    let user = null;
+    let chartInstance = null;
+    let qrScanner = null;
+
+    // TRIK SAKTI: Mengirim JSON sebagai TEXT biasa lewat "text/plain" bypass pemeriksaan CORS preflight browser
+    async function postData(payload) {
+      const response = await fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain; charset=utf-8" },
+        body: JSON.stringify(payload)
+      });
+      return response.json();
+    }
+
+    async function eksekusiLogin() {
       const u = document.getElementById('username').value;
       const p = document.getElementById('password').value;
-      const btn = document.getElementById('btn-login');
+      if(!u || !p) return alert("Harap isi semua bidang!");
       
-      if(!u || !p) return alert("Silakan isi semua kolom login!");
-      
-      btn.innerText = "Memproses...";
-      btn.disabled = true;
-      
+      document.getElementById('btn-login').innerText = "Memproses...";
       try {
-        // Solusi Utama: Mengirim data sebagai form URL encoded untuk mengantisipasi blokir CORS Redirect oleh browser
-        const formData = new URLSearchParams();
-        formData.append('action', 'login');
-        formData.append('username', u);
-        formData.append('password', p);
-
-        const response = await fetch(API_URL, {
-          method: 'POST',
-          mode: 'cors',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded'
-          },
-          body: formData.toString()
-        });
-        
-        const res = await response.json();
-        
-        if (res.status === "success") {
-          currentUser = { role: res.role, nama: res.nama };
-          showDashboard();
-        } else {
-          alert(res.message);
-        }
-      } catch (err) {
-        alert("Gagal sinkronisasi database. Pastikan URL Script Anda valid dan telah di-deploy publik.");
-        console.error(err);
-      } finally {
-        btn.innerText = "Masuk";
-        btn.disabled = false;
-      }
+        const res = await postData({ action: "login", username: u, password: p });
+        if(res.status === "success") {
+          user = res;
+          document.getElementById('login-page').classList.add('hidden');
+          document.getElementById('main-app').classList.remove('hidden');
+          document.getElementById('user-role').innerText = user.nama;
+          
+          if(user.role === 'admin') {
+            document.getElementById('menu-admin').classList.remove('hidden');
+            gantiTab('scan');
+          } else {
+            document.getElementById('menu-kepsek').classList.remove('hidden');
+            gantiTab('monitoring');
+          }
+        } else { alert(res.message); }
+      } catch(e) {
+        alert("Koneksi gagal. Cek kembali URL Deployment script Anda!");
+      } finally { document.getElementById('btn-login').innerText = "Masuk"; }
     }
 
-    function showDashboard() {
-      document.getElementById('login-page').classList.add('hidden');
-      document.getElementById('main-app').classList.remove('hidden');
-      document.getElementById('user-role').innerText = currentUser.nama;
+    function gantiTab(id) {
+      document.querySelectorAll('.tab-content').forEach(e => e.classList.add('hidden'));
+      document.getElementById('tab-' + id).classList.remove('hidden');
+      if(id !== 'scan' && qrScanner) { try { qrScanner.clear(); }catch(e){} }
       
-      if(currentUser.role === 'admin') {
-        document.getElementById('menu-admin').classList.remove('hidden');
-        switchTab('scan');
-      } else {
-        document.getElementById('menu-kepsek').classList.remove('hidden');
-        switchTab('monitoring');
-      }
+      if(id === 'scan') jalankanScanner();
+      if(id === 'laporan') muatLaporan();
+      if(id === 'grafik') muatGrafik();
+      if(id === 'monitoring') muatMonitoring();
     }
 
-    function switchTab(tabId) {
-      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-      document.getElementById('tab-' + tabId).classList.remove('hidden');
-      
-      if (tabId !== 'scan' && html5QrcodeScanner) {
-        try { html5QrcodeScanner.clear(); } catch(e){}
-      }
-
-      if(tabId === 'scan') startQRScanner();
-      if(tabId === 'laporan') muatLaporan();
-      if(tabId === 'grafik') muatGrafik();
-      if(tabId === 'monitoring') muatMentoring();
-    }
-
-    function startQRScanner() {
-      if(!html5QrcodeScanner){
-        html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 220 });
-      }
-      html5QrcodeScanner.render(async (decodedText) => {
-         try { await html5QrcodeScanner.clear(); } catch(e){}
-         await kirimAbsen(decodedText, 'absen_masuk', 'QR');
-      }, (error) => {});
-    }
-
-    async function prosesAbsen(jenisAbsen) {
-      const nip = document.getElementById('manual-nip').value;
-      if(!nip) return alert("Isi NIP terlebih dahulu!");
-      await kirimAbsen(nip, jenisAbsen, 'Manual');
-    }
-
-    async function kirimAbsen(nip, action, metode) {
-      try {
-        const formData = new URLSearchParams();
-        formData.append('action', action);
-        formData.append('nip', nip);
-        formData.append('metode', metode);
-
-        const response = await fetch(API_URL, {
-          method: 'POST',
-          mode: 'cors',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded'
-          },
-          body: formData.toString()
-        });
-        const res = await response.json();
+    function jalankanScanner() {
+      if(!qrScanner) qrScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 200 });
+      qrScanner.render(async (text) => {
+        try{ await qrScanner.clear(); }catch(e){}
+        const res = await postData({ action: "absen_masuk", nip: text, metode: "QR" });
         alert(res.message);
-        document.getElementById('manual-nip').value = "";
-        if(action === 'absen_masuk') switchTab('scan');
-      } catch(err) {
-        alert("Gagal memproses data absensi ke Google Sheet.");
-      }
+        gantiTab('scan');
+      }, () => {});
+    }
+
+    async function kirimAbsensi(act) {
+      const nip = document.getElementById('manual-nip').value;
+      if(!nip) return alert("NIP kosong!");
+      const res = await postData({ action: act, nip: nip, metode: "Manual" });
+      alert(res.message);
+      document.getElementById('manual-nip').value = "";
     }
 
     async function muatLaporan() {
-      const body = document.getElementById('tabel-laporan-body');
-      body.innerHTML = "<tr><td colspan='6' class='p-4 text-blue-600 font-semibold'>Mengambil data...</td></tr>";
-      try {
-        const res = await fetch(`${API_URL}?action=get_laporan`);
-        const data = await res.json();
-        body.innerHTML = "";
-        if(data.length === 0) {
-          body.innerHTML = "<tr><td colspan='6' class='p-4 text-gray-400'>Belum ada log data presensi.</td></tr>";
-          return;
-        }
-        data.forEach(row => {
-          body.innerHTML += `
-            <tr class="border-b hover:bg-gray-50">
-              <td class="p-2 font-semibold">${row.nip}</td><td class="p-2 text-left">${row.nama_guru}</td>
-              <td class="p-2">${row.tanggal}</td><td class="p-2 text-green-600 font-mono font-bold">${row.jam_masuk}</td>
-              <td class="p-2 text-red-600 font-mono font-bold">${row.jam_keluar}</td>
-              <td class="p-2"><span class="px-2 py-1 rounded text-xs font-bold text-white ${row.status_kehadiran === 'Hadir' ? 'bg-green-500':'bg-amber-500'}">${row.status_kehadiran}</span></td>
-            </tr>`;
-        });
-      } catch(e) { body.innerHTML = "<tr><td colspan='6' class='p-4 text-red-500'>Gagal sinkronisasi data laporan.</td></tr>"; }
+      const b = document.getElementById('tabel-body');
+      b.innerHTML = "<tr><td colspan='6' class='p-3'>Memuat data...</td></tr>";
+      const r = await fetch(`${API_URL}?action=get_laporan`);
+      const data = await r.json();
+      b.innerHTML = "";
+      data.forEach(x => {
+        b.innerHTML += `<tr class="border-b"><td>${x.nip}</td><td>${x.nama_guru}</td><td>${x.tanggal}</td><td class="text-green-600 font-bold">${x.jam_masuk}</td><td class="text-red-600 font-bold">${x.jam_keluar}</td><td>${x.status_kehadiran}</td></tr>`;
+      });
     }
 
     async function muatGrafik() {
-      try {
-        const res = await fetch(`${API_URL}?action=get_dashboard_stats`);
-        const stats = await res.json();
-        const ctx = document.getElementById('chartKehadiran').getContext('2d');
-        if (myChart) myChart.destroy();
-        
-        let belumAbsen = stats.totalGuru - (stats.hadir + stats.terlambat);
-        if (belumAbsen < 0) belumAbsen = 0;
-
-        myChart = new Chart(ctx, {
-          type: 'doughnut',
-          data: {
-            labels: ['Tepat Waktu', 'Terlambat', 'Belum Absen'],
-            datasets: [{
-              data: [stats.hadir, stats.terlambat, belumAbsen],
-              backgroundColor: ['#10B981', '#F59E0B', '#EF4444']
-            }]
-          },
-          options: { responsive: true }
-        });
-      } catch(e) { alert("Gagal memuat visualisasi grafik statistik."); }
-    }
-
-    async function tambahGuru() {
-      const nip = document.getElementById('guru-nip').value;
-      const nama = document.getElementById('guru-nama').value;
-      const jabatan = document.getElementById('guru-jabatan').value;
-      
-      if(!nip || !nama || !jabatan) return alert("Semua bidang data guru wajib diisi!");
-      
-      try {
-        const formData = new URLSearchParams();
-        formData.append('action', 'tambah_guru');
-        formData.append('nip', nip);
-        formData.append('nama', nama);
-        formData.append('jabatan', jabatan);
-
-        const response = await fetch(API_URL, {
-          method: 'POST',
-          mode: 'cors',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded'
-          },
-          body: formData.toString()
-        });
-        const res = await response.json();
-        alert(res.message);
-        document.getElementById('guru-nip').value = "";
-        document.getElementById('guru-nama').value = "";
-        document.getElementById('guru-jabatan').value = "";
-      } catch(e) { alert("Proses simpan data gagal."); }
-    }
-
-    async function muatMentoring() {
-      try {
-        const resStats = await fetch(`${API_URL}?action=get_dashboard_stats`);
-        const stats = await resStats.json();
-        
-        document.getElementById('m-total').innerText = stats.totalGuru;
-        document.getElementById('m-hadir').innerText = stats.hadir;
-        document.getElementById('m-telat').innerText = stats.terlambat;
-        
-        const resLap = await fetch(`${API_URL}?action=get_laporan`);
-        const dataLap = await resLap.json();
-        const feedBody = document.getElementById('live-feed-body');
-        feedBody.innerHTML = "";
-        
-        const hariIni = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Jakarta' });
-        const dataHariIni = dataLap.filter(r => r.tanggal === hariIni);
-
-        if(dataHariIni.length === 0) {
-          feedBody.innerHTML = "<tr><td colspan='3' class='p-4 text-gray-400 italic'>Belum ada aktivitas presensi masuk hari ini.</td></tr>";
-          return;
+      const r = await fetch(`${API_URL}?action=get_dashboard_stats`);
+      const s = await r.json();
+      const ctx = document.getElementById('chartKehadiran').getContext('2d');
+      if(chartInstance) chartInstance.destroy();
+      chartInstance = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: ['Hadir', 'Telat', 'Belum Absen'],
+          datasets: [{ data: [s.hadir, s.terlambat, Math.max(0, s.totalGuru - s.hadir - s.terlambat)], backgroundColor: ['#10B981', '#F59E0B', '#EF4444'] }]
         }
-
-        dataHariIni.forEach(row => {
-          feedBody.innerHTML += `
-            <tr class="border-b hover:bg-gray-50">
-              <td class="p-2 text-left font-medium">${row.nama_guru}</td>
-              <td class="p-2 font-mono font-bold text-gray-700">${row.jam_masuk}</td>
-              <td class="p-2"><span class="font-bold text-sm ${row.status_kehadiran === 'Hadir' ? 'text-green-600':'text-amber-600'}">${row.status_kehadiran}</span></td>
-            </tr>`;
-        });
-      } catch (e) { console.log("Gagal memuat monitoring data live."); }
+      });
     }
 
-    function logout() { location.reload(); }
+    async function simpanGuru() {
+      const n = document.getElementById('g-nip').value;
+      const nm = document.getElementById('g-nama').value;
+      const jb = document.getElementById('g-jabatan').value;
+      const res = await postData({ action: "tambah_guru", nip: n, nama: nm, jabatan: jb });
+      alert(res.message);
+      document.getElementById('g-nip').value = ""; document.getElementById('g-nama').value = ""; document.getElementById('g-jabatan').value = "";
+    }
+
+    async function muatMonitoring() {
+      const r1 = await fetch(`${API_URL}?action=get_dashboard_stats`);
+      const s = await r1.json();
+      document.getElementById('m-total').innerText = s.totalGuru;
+      document.getElementById('m-hadir').innerText = s.hadir;
+      document.getElementById('m-telat').innerText = s.terlambat;
+
+      const r2 = await fetch(`${API_URL}?action=get_laporan`);
+      const l = await r2.json();
+      const b = document.getElementById('live-body');
+      b.innerHTML = "";
+      const tgl = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Jakarta' });
+      l.filter(x => x.tanggal === tgl).forEach(x => {
+        b.innerHTML += `<tr><td>${x.nama_guru}</td><td>${x.jam_masuk}</td><td>${x.status_kehadiran}</td></tr>`;
+      });
+    }
+    // Gunakan fungsi pengiriman ini di index.html kamu
+async function postData(payload) {
+  const response = await fetch(API_URL, {
+    method: "POST",
+    headers: { "Content-Type": "text/plain; charset=utf-8" },
+    body: JSON.stringify(payload)
+  });
+  return response.json();
+}
   </script>
 </body>
 </html>
