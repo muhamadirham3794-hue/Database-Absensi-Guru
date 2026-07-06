@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sistem Presensi Guru - Premium Edition</title>
+  <title>Sistem Presensi Guru - Security & Leave System</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://unpkg.com/html5-qrcode"></script>
@@ -11,25 +11,23 @@
 <body class="bg-slate-50 font-sans text-slate-800">
 
   <div id="login-page" class="flex h-screen items-center justify-center bg-gradient-to-tr from-blue-700 via-indigo-600 to-cyan-500 px-4">
-    <div class="w-full max-w-md bg-white/95 backdrop-blur-md p-8 rounded-2xl shadow-2xl border border-white/20 transition-all duration-300 transform hover:scale-[1.01]">
+    <div class="w-full max-w-md bg-white/95 backdrop-blur-md p-8 rounded-2xl shadow-2xl border border-white/20">
       <div class="flex flex-col items-center mb-6">
-        <div class="w-20 h-20 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg mb-3 text-white text-3xl font-bold">
-          🏫
-        </div>
+        <div class="w-20 h-20 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg mb-3 text-white text-3xl">🏫</div>
         <h2 class="text-2xl font-extrabold text-center text-slate-800 tracking-tight">E-Absen Presensi Guru</h2>
-        <p class="text-sm text-slate-500 font-medium mt-1">Sistem Informasi Absensi Sekolah Digital</p>
+        <p class="text-sm text-slate-500 font-medium mt-1">Protected with Security & Leave System</p>
       </div>
       
       <div class="space-y-4">
         <div>
           <label class="block text-slate-700 font-semibold mb-1 text-sm">Username</label>
-          <input type="text" id="username" placeholder="Masukkan username admin/kepsek" class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-black focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+          <input type="text" id="username" placeholder="Username admin/kepsek" class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-black outline-none focus:ring-2 focus:ring-indigo-500">
         </div>
         <div class="mb-2">
           <label class="block text-slate-700 font-semibold mb-1 text-sm">Password</label>
-          <input type="password" id="password" placeholder="••••••••" class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-black focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+          <input type="password" id="password" placeholder="••••••••" class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-black outline-none focus:ring-2 focus:ring-indigo-500">
         </div>
-        <button onclick="eksekusiLogin()" id="btn-login" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-xl hover:from-blue-700 hover:to-indigo-700 font-bold shadow-lg shadow-indigo-200 transition-all active:scale-[0.99] mt-2">
+        <button onclick="eksekusiLogin()" id="btn-login" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-xl hover:from-blue-700 hover:to-indigo-700 font-bold shadow-lg transition-all active:scale-[0.99] mt-2">
           Masuk Ke Sistem
         </button>
       </div>
@@ -37,22 +35,23 @@
   </div>
 
   <div id="main-app" class="hidden min-h-screen flex flex-col">
-    <nav class="bg-gradient-to-r from-blue-700 to-indigo-700 text-white px-6 py-4 flex justify-between items-center shadow-lg z-10">
+    <nav class="bg-gradient-to-r from-blue-700 to-indigo-700 text-white px-6 py-4 flex justify-between items-center shadow-lg">
       <div class="flex items-center gap-3">
         <span class="text-2xl">⚡</span>
         <div>
           <h1 class="text-lg font-black tracking-wide leading-none">E-ABSEN DIGITAL</h1>
-          <p class="text-xs text-blue-200 font-medium mt-0.5">User: <span id="user-role" class="font-bold text-white">Guru</span></p>
+          <p class="text-xs text-blue-200 font-medium mt-0.5">User: <span id="user-role" class="font-bold text-white">-</span></p>
         </div>
       </div>
-      <button onclick="location.reload()" class="bg-rose-500 hover:bg-rose-600 px-4 py-2 rounded-xl text-sm font-bold shadow-md shadow-rose-900/20 transition-all active:scale-95">Keluar</button>
+      <button onclick="location.reload()" class="bg-rose-500 hover:bg-rose-600 px-4 py-2 rounded-xl text-sm font-bold shadow-md transition-all active:scale-95">Keluar</button>
     </nav>
 
     <div class="flex flex-1 flex-col md:flex-row">
-      <aside class="w-full md:w-64 bg-white shadow-xl border-r border-slate-100 p-4 space-y-1.5 z-0">
-        <p class="text-xxs font-bold text-slate-400 uppercase tracking-wider px-3 mb-2">Menu Utama</p>
+      <aside class="w-full md:w-64 bg-white shadow-xl border-r border-slate-100 p-4 space-y-1.5">
+        <p class="text-xs font-bold text-slate-400 uppercase tracking-wider px-3 mb-2">Menu Utama</p>
         <div id="menu-admin" class="hidden space-y-1">
           <button onclick="gantiTab('scan')" class="tab-btn w-full text-left px-4 py-3 hover:bg-slate-50 text-slate-600 font-semibold rounded-xl transition-all flex items-center gap-3">📷 <span>Scan QR & Manual</span></button>
+          <button onclick="gantiTab('izin')" class="tab-btn w-full text-left px-4 py-3 hover:bg-slate-50 text-slate-600 font-semibold rounded-xl transition-all flex items-center gap-3">📝 <span>Input Izin / Sakit</span></button>
           <button onclick="gantiTab('laporan')" class="tab-btn w-full text-left px-4 py-3 hover:bg-slate-50 text-slate-600 font-semibold rounded-xl transition-all flex items-center gap-3">📊 <span>Laporan Presensi</span></button>
           <button onclick="gantiTab('input-guru')" class="tab-btn w-full text-left px-4 py-3 hover:bg-slate-50 text-slate-600 font-semibold rounded-xl transition-all flex items-center gap-3">👤 <span>Input Data Guru</span></button>
           <button onclick="gantiTab('grafik')" class="tab-btn w-full text-left px-4 py-3 hover:bg-slate-50 text-slate-600 font-semibold rounded-xl transition-all flex items-center gap-3">📈 <span>Grafik Statistik</span></button>
@@ -67,90 +66,90 @@
         
         <section id="tab-scan" class="tab-content hidden space-y-6">
           <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col items-center justify-center">
-              <h3 class="text-base font-bold text-slate-700 mb-4 flex items-center gap-2">📷 Kamera QR Scanner Pemindai</h3>
-              <div id="reader" class="overflow-hidden rounded-xl border-2 border-dashed border-slate-200 bg-slate-50" style="width:100%; max-width:320px;"></div>
-              <p class="text-xs text-slate-400 mt-3 text-center">Posisikan QR Code guru tepat di tengah kotak kamera</p>
+            <div class="bg-white p-6 rounded-2xl shadow-sm flex flex-col items-center justify-center">
+              <h3 class="text-base font-bold text-slate-700 mb-4">📷 Kamera QR Scanner Pemindai</h3>
+              <div id="reader" class="overflow-hidden rounded-xl border-2 border-dashed border-slate-200" style="width:100%; max-width:320px;"></div>
             </div>
-            
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-center">
-              <h3 class="text-base font-bold text-slate-700 mb-2 flex items-center gap-2">⌨️ Alternatif Pengetikan NIP Manual</h3>
-              <p class="text-xs text-slate-400 mb-4">Gunakan menu ini jika kartu QR Code guru tertinggal atau kamera bermasalah.</p>
+            <div class="bg-white p-6 rounded-2xl shadow-sm flex flex-col justify-center">
+              <h3 class="text-base font-bold text-slate-700 mb-2">⌨️ Alternatif Pengetikan NIP Manual</h3>
               <div class="space-y-4">
-                <input type="text" id="manual-nip" placeholder="Masukkan Nomor Induk Pegawai (NIP)" class="w-full border border-slate-200 px-4 py-3 rounded-xl text-black focus:ring-2 focus:ring-blue-500 outline-none">
+                <input type="text" id="manual-nip" placeholder="Masukkan NIP" class="w-full border border-slate-200 px-4 py-3 rounded-xl text-black focus:ring-2 focus:ring-blue-500 outline-none">
                 <div class="grid grid-cols-2 gap-3">
-                  <button onclick="kirimAbsensi('absen_masuk')" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl shadow-md shadow-emerald-100 transition-all active:scale-95">Set Masuk</button>
-                  <button onclick="kirimAbsensi('absen_keluar')" class="bg-amber-500 hover:bg-amber-600 text-white font-bold py-3 rounded-xl shadow-md shadow-amber-100 transition-all active:scale-95">Set Keluar</button>
+                  <button onclick="kirimAbsensi('absen_masuk')" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl">Set Masuk</button>
+                  <button onclick="kirimAbsensi('absen_keluar')" class="bg-amber-500 hover:bg-amber-600 text-white font-bold py-3 rounded-xl">Set Keluar</button>
                 </div>
               </div>
             </div>
           </div>
         </section>
 
-        <section id="tab-laporan" class="tab-content hidden bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+        <section id="tab-izin" class="tab-content hidden bg-white p-6 rounded-2xl shadow-sm border border-slate-100 max-w-md mx-auto">
+          <h3 class="text-lg font-bold text-slate-800 mb-1">Form Input Izin / Sakit / Cuti</h3>
+          <p class="text-xs text-slate-400 mb-4">Gunakan ini agar guru yang tidak masuk resmi terdata dan tidak dianggap alpa.</p>
+          <div class="space-y-4">
+            <input type="text" id="izin-nip" placeholder="Masukkan NIP Guru" class="w-full border border-slate-200 p-3 rounded-xl text-black outline-none focus:ring-2 focus:ring-blue-500">
+            <select id="izin-status" class="w-full border border-slate-200 p-3 rounded-xl text-black outline-none focus:ring-2 focus:ring-blue-500">
+              <option value="Sakit">Sakit</option>
+              <option value="Izin">Izin / Dinas Luar</option>
+              <option value="Cuti">Cuti Tahunan</option>
+            </select>
+            <button onclick="kirimIzin()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold w-full py-3 rounded-xl">Simpan Data Absen Ketidakhadiran</button>
+          </div>
+        </section>
+
+        <section id="tab-laporan" class="tab-content hidden bg-white p-6 rounded-2xl shadow-sm">
           <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
             <div>
               <h3 class="text-lg font-bold text-slate-800">Data Riwayat Kehadiran Guru</h3>
-              <p class="text-xs text-slate-400">Seluruh rekaman log absensi masuk dan keluar yang tersimpan di server.</p>
             </div>
-            <button onclick="unduhLaporanCSV()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold px-4 py-2.5 rounded-xl flex items-center gap-2 shadow-md shadow-indigo-100 transition-all active:scale-95">
-              📥 Unduh Format Excel (.csv)
-            </button>
+            <button onclick="unduhLaporanCSV()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold px-4 py-2.5 rounded-xl">📥 Unduh Format Excel (.csv)</button>
           </div>
           <div class="overflow-x-auto rounded-xl border border-slate-100">
             <table class="w-full text-center border-collapse text-sm">
               <thead>
-                <tr class="bg-slate-50 border-b border-slate-100 text-slate-600 font-semibold">
-                  <th class="p-3">NIP</th><th class="p-3">Nama Lengkap</th><th class="p-3">Tanggal</th><th class="p-3">Jam Masuk</th><th class="p-3">Jam Keluar</th><th class="p-3">Status</th>
-                </tr>
+                <tr class="bg-slate-50 text-slate-600 font-semibold"><th class="p-3">NIP</th><th class="p-3">Nama</th><th class="p-3">Tanggal</th><th class="p-3">Masuk</th><th class="p-3">Keluar</th><th class="p-3">Status</th></tr>
               </thead>
-              <tbody id="tabel-body" class="divide-y divide-slate-100 text-slate-700"></tbody>
+              <tbody id="tabel-body" class="divide-y divide-slate-100"></tbody>
             </table>
           </div>
         </section>
 
-        <section id="tab-grafik" class="tab-content hidden bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-          <h3 class="text-lg font-bold text-slate-800 mb-1">Visualisasi Statistik Kehadiran</h3>
-          <p class="text-xs text-slate-400 mb-6">Persentase data kehadiran akumulatif hari ini.</p>
+        <section id="tab-grafik" class="tab-content hidden bg-white p-6 rounded-2xl shadow-sm">
+          <h3 class="text-lg font-bold text-slate-800 mb-6">Visualisasi Statistik Kehadiran</h3>
           <div style="max-width:320px;" class="mx-auto"><canvas id="chartKehadiran"></canvas></div>
         </section>
 
-        <section id="tab-input-guru" class="tab-content hidden bg-white p-6 rounded-2xl shadow-sm border border-slate-100 max-w-md mx-auto">
-          <h3 class="text-lg font-bold text-slate-800 mb-1">Registrasi Guru Baru</h3>
-          <p class="text-xs text-slate-400 mb-4">Tambahkan record identitas pegawai baru ke dalam sistem database.</p>
+        <section id="tab-input-guru" class="tab-content hidden bg-white p-6 rounded-2xl shadow-sm max-w-md mx-auto">
+          <h3 class="text-lg font-bold text-slate-800 mb-4">Registrasi Guru Baru</h3>
           <div class="space-y-4">
-            <input type="text" id="g-nip" placeholder="Nomor Induk Pegawai (NIP)" class="w-full border border-slate-200 p-3 rounded-xl text-black outline-none focus:ring-2 focus:ring-blue-500">
-            <input type="text" id="g-nama" placeholder="Nama Lengkap & Gelar" class="w-full border border-slate-200 p-3 rounded-xl text-black outline-none focus:ring-2 focus:ring-blue-500">
-            <input type="text" id="g-jabatan" placeholder="Jabatan / Guru Mata Pelajaran" class="w-full border border-slate-200 p-3 rounded-xl text-black outline-none focus:ring-2 focus:ring-blue-500">
-            <button onclick="simpanGuru()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold w-full py-3 rounded-xl shadow-lg shadow-blue-100 transition-all active:scale-95">Daftarkan Guru</button>
+            <input type="text" id="g-nip" placeholder="NIP" class="w-full border border-slate-200 p-3 rounded-xl text-black outline-none">
+            <input type="text" id="g-nama" placeholder="Nama Lengkap" class="w-full border border-slate-200 p-3 rounded-xl text-black outline-none">
+            <input type="text" id="g-jabatan" placeholder="Jabatan" class="w-full border border-slate-200 p-3 rounded-xl text-black outline-none">
+            <button onclick="simpanGuru()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold w-full py-3 rounded-xl">Daftarkan Guru</button>
           </div>
         </section>
 
         <section id="tab-monitoring" class="tab-content hidden space-y-6">
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between">
-              <div><p class="text-xs font-bold text-slate-400 uppercase">Total Guru</p><p id="m-total" class="text-2xl font-black text-slate-800 mt-1">0</p></div>
-              <div class="text-2xl p-3 bg-blue-50 rounded-xl text-blue-600">👥</div>
+          <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
+            <div class="bg-white p-5 rounded-2xl shadow-sm flex items-center justify-between">
+              <div><p class="text-xs font-bold text-slate-400 uppercase">Total Guru</p><p id="m-total" class="text-2xl font-black text-slate-800">0</p></div>
             </div>
-            <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between">
-              <div><p class="text-xs font-bold text-slate-400 uppercase">Hadir Tepat Waktu</p><p id="m-hadir" class="text-2xl font-black text-emerald-600 mt-1">0</p></div>
-              <div class="text-2xl p-3 bg-emerald-50 rounded-xl text-emerald-600">✅</div>
+            <div class="bg-white p-5 rounded-2xl shadow-sm flex items-center justify-between">
+              <div><p class="text-xs font-bold text-slate-400 uppercase">Tepat Waktu</p><p id="m-hadir" class="text-2xl font-black text-emerald-600">0</p></div>
             </div>
-            <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between">
-              <div><p class="text-xs font-bold text-slate-400 uppercase">Terlambat</p><p id="m-telat" class="text-2xl font-black text-amber-500 mt-1">0</p></div>
-              <div class="text-2xl p-3 bg-amber-50 rounded-xl text-amber-500">⏳</div>
+            <div class="bg-white p-5 rounded-2xl shadow-sm flex items-center justify-between">
+              <div><p class="text-xs font-bold text-slate-400 uppercase">Terlambat</p><p id="m-telat" class="text-2xl font-black text-amber-500">0</p></div>
+            </div>
+            <div class="bg-white p-5 rounded-2xl shadow-sm flex items-center justify-between">
+              <div><p class="text-xs font-bold text-slate-400 uppercase">Izin / Sakit</p><p id="m-izin" class="text-2xl font-black text-indigo-500">0</p></div>
             </div>
           </div>
-          <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+          <div class="bg-white p-6 rounded-2xl shadow-sm">
             <h4 class="text-base font-bold text-slate-800 mb-4">Log Live Kehadiran Hari Ini</h4>
-            <div class="overflow-x-auto rounded-xl border border-slate-100">
-              <table class="w-full text-center border-collapse text-sm">
-                <thead>
-                  <tr class="bg-slate-50 text-slate-600 font-semibold border-b border-slate-100">
-                    <th class="p-3">Nama Guru</th><th class="p-3">Jam Masuk</th><th class="p-3">Keterangan</th>
-                  </tr>
-                </thead>
-                <tbody id="live-body" class="divide-y divide-slate-100 text-slate-700"></tbody>
+            <div class="overflow-x-auto">
+              <table class="w-full text-center text-sm">
+                <thead><tr class="bg-slate-50 text-slate-600 font-semibold"><th class="p-3">Nama Guru</th><th class="p-3">Jam Masuk</th><th class="p-3">Keterangan</th></tr></thead>
+                <tbody id="live-body" class="divide-y divide-slate-100"></tbody>
               </table>
             </div>
           </div>
@@ -161,13 +160,9 @@
   </div>
 
   <script>
-    // ⚠️ MASUKKAN URL DEPLOYMENT APPS SCRIPT ANDA DI SINI
-    const API_URL = "https://script.google.com/macros/s/AKfycbxgzFsvCc82rmx5QQ0HCOe1RlL9J8a-7cwvxS59_73M_mEbx9XffrgvKMe1m4yGAtvFGg/exec"; 
+    const API_URL = "https://script.google.com/macros/s/AKfycbzwDw7NRGvOQwWcXmhTRhAV-ySwnGGhDWimU3kWEqc_Y3ZjK3BJ4pE1rY_t_isdpvhuDQ/exec"; // Ganti dengan URL /exec terbarumu
 
-    let user = null;
-    let chartInstance = null;
-    let qrScanner = null;
-    let dataMentahLaporan = []; // Penampung objek data untuk kebutuhan eksport file
+    let user = null; let chartInstance = null; let qrScanner = null; let dataMentahLaporan = [];
 
     async function postData(payload) {
       const response = await fetch(API_URL, {
@@ -193,169 +188,126 @@
           document.getElementById('user-role').innerText = user.nama + " (" + user.role.toUpperCase() + ")";
           
           if(user.role === 'admin') {
-            document.getElementById('menu-admin').classList.remove('hidden');
-            gantiTab('scan');
+            document.getElementById('menu-admin').classList.remove('hidden'); gantiTab('scan');
           } else {
-            document.getElementById('menu-kepsek').classList.remove('hidden');
-            gantiTab('monitoring');
+            document.getElementById('menu-kepsek').classList.remove('hidden'); gantiTab('monitoring');
           }
         } else { alert(res.message); }
-      } catch(e) {
-        alert("Gagal terhubung ke database Apps Script. Periksa kembali URL API Anda.");
-      } finally { document.getElementById('btn-login').innerText = "Masuk Ke Sistem"; }
+      } catch(e) { alert("Gagal terhubung ke database server."); }
+      finally { document.getElementById('btn-login').innerText = "Masuk Ke Sistem"; }
     }
 
     function gantiTab(id) {
       document.querySelectorAll('.tab-content').forEach(e => e.classList.add('hidden'));
-      document.querySelectorAll('.tab-btn').forEach(e => e.classList.remove('bg-blue-50', 'text-blue-600', 'border-l-4', 'border-blue-600'));
-      
       document.getElementById('tab-' + id).classList.remove('hidden');
-      
-      // Matikan scanner jika berpindah tab agar kamera lepas
       if(id !== 'scan' && qrScanner) { try { qrScanner.clear(); } catch(e){} }
-      
       if(id === 'scan') jalankanScanner();
       if(id === 'laporan') muatLaporan();
       if(id === 'grafik') muatGrafik();
       if(id === 'monitoring') muatMonitoring();
     }
 
-    // VALIDASI ERROR KAMERA: Menangkap masalah izin perangkat
     function jalankanScanner() {
       if(!qrScanner) qrScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 220 });
       qrScanner.render(async (text) => {
         try { await qrScanner.clear(); } catch(e){}
         const res = await postData({ action: "absen_masuk", nip: text, metode: "QR Code" });
-        alert(res.message);
-        gantiTab('scan');
-      }, (error) => {
-        // Log senyap pencarian frame QR, abaikan error pencarian text kosong
-      });
-      
-      // Deteksi jika kamera diblokir browser
-      navigator.mediaDevices.getUserMedia({ video: true }).catch(err => {
-        alert("Sistem gagal mengakses kamera. Mohon berikan izin kamera pada peramban/browser Anda lalu segarkan halaman!");
-      });
+        alert(res.message); gantiTab('scan');
+      }, (error) => {});
     }
 
     async function kirimAbsensi(act) {
       const nip = document.getElementById('manual-nip').value;
-      if(!nip) return alert("Nomor NIP wajib diisi!");
+      if(!nip) return alert("NIP wajib diisi!");
       const res = await postData({ action: act, nip: nip, metode: "Manual" });
-      alert(res.message);
-      document.getElementById('manual-nip').value = "";
+      alert(res.message); document.getElementById('manual-nip').value = "";
+    }
+
+    // FUNGSI BARU KIRIM IZIN
+    async function kirimIzin() {
+      const nip = document.getElementById('izin-nip').value;
+      const st = document.getElementById('izin-status').value;
+      if(!nip) return alert("NIP wajib diisi!");
+      const res = await postData({ action: "input_izin", nip: nip, status: st });
+      alert(res.message); document.getElementById('izin-nip').value = "";
     }
 
     async function muatLaporan() {
       const b = document.getElementById('tabel-body');
-      b.innerHTML = "<tr><td colspan='6' class='p-4 text-slate-400 text-xs animate-pulse'>Sedang mengunduh data terbaru dari server...</td></tr>";
+      b.innerHTML = "<tr><td colspan='6' class='p-4 text-slate-400 text-xs animate-pulse'>Memuat...</td></tr>";
       try {
         const r = await fetch(`${API_URL}?action=get_laporan`);
-        dataMentahLaporan = await r.json();
-        b.innerHTML = "";
-        if(dataMentahLaporan.length === 0) {
-          b.innerHTML = "<tr><td colspan='6' class='p-4 text-slate-400 text-xs'>Belum ada data kehadiran terekam.</td></tr>";
-          return;
-        }
+        dataMentahLaporan = await r.json(); b.innerHTML = "";
         dataMentahLaporan.forEach(x => {
-          const badgeColor = x.status_kehadiran === 'Hadir' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700';
-          b.innerHTML += `<tr class="hover:bg-slate-50/80 transition-all">
-            <td class="p-3 font-medium text-slate-600">${x.nip}</td>
-            <td class="p-3 font-semibold text-slate-800 text-left">${x.nama_guru}</td>
-            <td class="p-3 text-slate-500">${x.tanggal}</td>
-            <td class="p-3 text-emerald-600 font-bold">${x.jam_masuk}</td>
-            <td class="p-3 text-rose-500 font-bold">${x.jam_keluar}</td>
-            <td class="p-3"><span class="px-2.5 py-1 rounded-full text-xs font-bold ${badgeColor}">${x.status_kehadiran}</span></td>
+          let badge = 'bg-slate-100 text-slate-700';
+          if(x.status_kehadiran === 'Hadir') badge = 'bg-emerald-50 text-emerald-700';
+          else if(x.status_kehadiran === 'Terlambat') badge = 'bg-amber-50 text-amber-700';
+          else if(['Sakit','Izin','Cuti'].indexOf(x.status_kehadiran) !== -1) badge = 'bg-indigo-50 text-indigo-700';
+          
+          b.innerHTML += `<tr>
+            <td class="p-3">${x.nip}</td><td class="p-3 font-semibold text-left">${x.nama_guru}</td>
+            <td class="p-3">${x.tanggal}</td><td class="p-3 text-emerald-600">${x.jam_masuk}</td>
+            <td class="p-3 text-rose-500">${x.jam_keluar}</td>
+            <td class="p-3"><span class="px-2.5 py-1 rounded-full text-xs font-bold ${badge}">${x.status_kehadiran}</span></td>
           </tr>`;
         });
-      } catch(e) { b.innerHTML = "<tr><td colspan='6' class='p-4 text-red-500 text-xs'>Gagal memuat laporan. Hubungkan ke jaringan internet!</td></tr>"; }
+      } catch(e) { b.innerHTML = "<tr><td colspan='6' class='p-4 text-red-500'>Gagal memuat.</td></tr>"; }
     }
 
-    // FITUR UNDUH LAPORAN EXCEL AUTOMATIC
     function unduhLaporanCSV() {
-      if(dataMentahLaporan.length === 0) return alert("Tidak ada data laporan yang bisa diekspor saat ini!");
-      
-      let csvContent = "data:text/csv;charset=utf-8,";
-      csvContent += "NIP,Nama Guru,Tanggal,Jam Masuk,Jam Keluar,Status Kehadiran,Metode\n"; // Header kolom
-      
-      dataMentahLaporan.forEach(x => {
-        let baris = `"${x.nip}","${x.nama_guru}","${x.tanggal}","${x.jam_masuk}","${x.jam_keluar}","${x.status_kehadiran}","${x.metode || 'Manual'}"`;
-        csvContent += baris + "\n";
-      });
-      
-      const encodedUri = encodeURI(csvContent);
-      const link = document.createElement("a");
-      link.setAttribute("href", encodedUri);
-      link.setAttribute("download", `Rekap_Presensi_Guru_${new Date().toLocaleDateString('id-ID')}.csv`);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      if(dataMentahLaporan.length === 0) return alert("Tidak ada data!");
+      let csv = "data:text/csv;charset=utf-8,NIP,Nama Guru,Tanggal,Jam Masuk,Jam Keluar,Status Kehadiran,Metode\n";
+      dataMentahLaporan.forEach(x => { csv += `"${x.nip}","${x.nama_guru}","${x.tanggal}","${x.jam_masuk}","${x.jam_keluar}","${x.status_kehadiran}","${x.metode}"\n`; });
+      const link = document.createElement("a"); link.setAttribute("href", encodeURI(csv));
+      link.setAttribute("download", `Rekap_Presensi.csv`); document.body.appendChild(link); link.click(); document.body.removeChild(link);
     }
 
     async function muatGrafik() {
       try {
-        const r = await fetch(`${API_URL}?action=get_dashboard_stats`);
-        const s = await r.json();
+        const r = await fetch(`${API_URL}?action=get_dashboard_stats`); const s = await r.json();
         const ctx = document.getElementById('chartKehadiran').getContext('2d');
         if(chartInstance) chartInstance.destroy();
         chartInstance = new Chart(ctx, {
           type: 'doughnut',
           data: {
-            labels: ['Tepat Waktu', 'Terlambat', 'Belum Absen'],
+            labels: ['Tepat Waktu', 'Terlambat', 'Izin/Sakit/Cuti', 'Belum Absen'],
             datasets: [{ 
-              data: [s.hadir, s.terlambat, Math.max(0, s.totalGuru - s.hadir - s.terlambat)], 
-              backgroundColor: ['#10B981', '#F59E0B', '#EF4444'],
-              borderWidth: 2
+              data: [s.hadir, s.terlambat, s.izin, Math.max(0, s.totalGuru - s.hadir - s.terlambat - s.izin)], 
+              backgroundColor: ['#10B981', '#F59E0B', '#6366F1', '#EF4444']
             }]
-          },
-          options: { plugins: { legend: { position: 'bottom' } } }
+          }
         });
-      } catch(e) { alert("Gagal memuat diagram statistik sekolah."); }
+      } catch(e){}
     }
 
     async function simpanGuru() {
-      const n = document.getElementById('g-nip').value;
-      const nm = document.getElementById('g-nama').value;
-      const jb = document.getElementById('g-jabatan').value;
-      if(!n || !nm || !jb) return alert("Semua form wajib diisi lengkap!");
-      
+      const n = document.getElementById('g-nip').value; const nm = document.getElementById('g-nama').value; const jb = document.getElementById('g-jabatan').value;
+      if(!n || !nm || !jb) return alert("Wajib isi!");
       const res = await postData({ action: "tambah_guru", nip: n, nama: nm, jabatan: jb });
-      alert(res.message);
-      document.getElementById('g-nip').value = ""; 
-      document.getElementById('g-nama').value = ""; 
-      document.getElementById('g-jabatan').value = "";
+      alert(res.message); location.reload();
     }
 
     async function muatMonitoring() {
       try {
-        const r1 = await fetch(`${API_URL}?action=get_dashboard_stats`);
-        const s = await r1.json();
+        const r1 = await fetch(`${API_URL}?action=get_dashboard_stats`); const s = await r1.json();
         document.getElementById('m-total').innerText = s.totalGuru;
         document.getElementById('m-hadir').innerText = s.hadir;
         document.getElementById('m-telat').innerText = s.terlambat;
+        document.getElementById('m-izin').innerText = s.izin;
 
-        const r2 = await fetch(`${API_URL}?action=get_laporan`);
-        const l = await r2.json();
-        const b = document.getElementById('live-body');
-        b.innerHTML = "";
-        
-        // Filter agar menampilkan record tanggal hari ini saja secara real-time
+        const r2 = await fetch(`${API_URL}?action=get_laporan`); const l = await r2.json();
+        const b = document.getElementById('live-body'); b.innerHTML = "";
         const tglHariIni = new Date().toISOString().split('T')[0];
         const dataHariIni = l.filter(x => x.tanggal === tglHariIni);
         
         if(dataHariIni.length === 0) {
-          b.innerHTML = "<tr><td colspan='3' class='p-3 text-slate-400 text-xs'>Belum ada guru yang melakukan absensi hari ini.</td></tr>";
-          return;
+          b.innerHTML = "<tr><td colspan='3' class='p-3 text-slate-400 text-xs'>Belum ada data hari ini.</td></tr>"; return;
         }
         dataHariIni.forEach(x => {
-          b.innerHTML += `<tr class="border-b border-slate-100">
-            <td class="p-3 font-semibold text-slate-800 text-left">${x.nama_guru}</td>
-            <td class="p-3 font-bold text-blue-600">${x.jam_masuk}</td>
-            <td class="p-3 text-xs"><span class="px-2 py-0.5 rounded font-bold ${x.status_kehadiran === 'Hadir' ? 'bg-emerald-50 text-emerald-700':'bg-amber-50 text-amber-700'}">${x.status_kehadiran}</span></td>
-          </tr>`;
+          b.innerHTML += `<tr><td class="p-3 text-left">${x.nama_guru}</td><td class="p-3 font-bold text-blue-600">${x.jam_masuk}</td><td class="p-3 text-xs"><span class="px-2 py-0.5 rounded font-bold bg-slate-100">${x.status_kehadiran}</span></td></tr>`;
         });
       } catch(e){}
     }
-  </script> 
+  </script>
 </body>
 </html>
