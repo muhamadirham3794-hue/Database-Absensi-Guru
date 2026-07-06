@@ -85,7 +85,7 @@
 
         <section id="tab-izin" class="tab-content hidden bg-white p-6 rounded-2xl shadow-sm border border-slate-100 max-w-md mx-auto">
           <h3 class="text-lg font-bold text-slate-800 mb-1">Form Input Izin / Sakit / Cuti</h3>
-          <p class="text-xs text-slate-400 mb-4">Gunakan ini agar guru yang tidak masuk resmi terdata dan tidak dianggap alpa.</p>
+          <p class="text-xs text-slate-400 mb-4">Gunakan ini agar guru yang tidak masuk resmi terdata di laporan sekolah.</p>
           <div class="space-y-4">
             <input type="text" id="izin-nip" placeholder="Masukkan NIP Guru" class="w-full border border-slate-200 p-3 rounded-xl text-black outline-none focus:ring-2 focus:ring-blue-500">
             <select id="izin-status" class="w-full border border-slate-200 p-3 rounded-xl text-black outline-none focus:ring-2 focus:ring-blue-500">
@@ -160,7 +160,8 @@
   </div>
 
   <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbyZhKliSYwYvFX1Hhk3tWpi7PN3IM_aDeZ6lGh3UJXSpejHqSBoJYMhvBsoDSBPifNd/exec"; // Ganti dengan URL /exec terbarumu
+    // URL Web App Apps Script Anda yang Baru
+    const API_URL = "https://script.google.com/macros/s/AKfycbyN13di5kphvXwIvGcwgrHTIDy-qEXEqEIhkbV2Fxcc3kXAN1bO4dJBCY4B_pkwTeHVhA/exec"; 
 
     let user = null; let chartInstance = null; let qrScanner = null; let dataMentahLaporan = [];
 
@@ -223,7 +224,6 @@
       alert(res.message); document.getElementById('manual-nip').value = "";
     }
 
-    // FUNGSI BARU KIRIM IZIN
     async function kirimIzin() {
       const nip = document.getElementById('izin-nip').value;
       const st = document.getElementById('izin-status').value;
