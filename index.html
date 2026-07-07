@@ -279,13 +279,17 @@
 
 
   <script>
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwwypvbsyT03oL9gjxFz7d94kWfa9LJQYIfFFlr-V9glAYw-Y7MawWkEG7VUd5kkz3ekw/exec";
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycby4dCp0tSyR5oN1nSgqyhAwmzTWVKjBqnVdNsfW0oIUIkhII4GZ90kCslW1yC1zWSqU/exec";
 
     let chartInstance = null;
     let kChartInstance = null;
     let html5QrcodeScanner = null;
     let userRole = '';
     let userName = '';
+
+    // Variabel global penampung sementara konfigurasi jam kerja ter-sinkronisasi
+    let globalConfigMasuk = "07:00";
+    let globalConfigPulang = "14:00";
 
     async function panggilAPI(fungsiName, argumenArray = []) {
       try {
@@ -343,23 +347,21 @@
       location.reload();
     }
 
-    // ENGINE AMBIL & RENDER DATA DATABASE (FIX FORMAT JAM KERJA & LOGIKA STATUS)
+    // ENGINE AGREGASI DATA (PERBAIKAN TOTAL LOGIKA HITUNG STATISTIK)
     async function refreshData() {
       const res = await panggilAPI("getDashboardData");
       if(!res.stats) return;
 
-      // --- PROSES DAN BERSIHKAN FORMAT JAM CONFIG ---
       let configMasukRaw = res.config.Jam_Masuk || "07:00";
       let configPulangRaw = res.config.Jam_Pulang || "14:00";
 
-      if (configMasukRaw.includes("T")) {
-        configMasukRaw = configMasukRaw.split("T")[1].slice(0, 5);
-      }
-      if (configPulangRaw.includes("T")) {
-        configPulangRaw = configPulangRaw.split("T")[1].slice(0, 5);
-      }
+      if (configMasukRaw.includes("T")) { configMasukRaw = configMasukRaw.split("T")[1].slice(0, 5); }
+      if (configPulangRaw.includes("T")) { configPulangRaw = configPulangRaw.split("T")[1].slice(0, 5); }
 
-      // Variable penampung hitungan statistik lokal real-time di frontend
+      // Kunci ke variabel global agar sinkron dengan modul pencegahan waktu pulang prematur
+      globalConfigMasuk = configMasukRaw;
+      globalConfigPulang = configPulangRaw;
+
       let hitungHadirTepatWaktu = 0;
       let hitungTerlambat = 0;
       let hitungPulang = 0;
@@ -388,24 +390,30 @@
           const jamMenitAbsen = jam.slice(0, 5);
           if (jamMenitAbsen > configMasukRaw) {
             grupLog[key].statusKet = "Terlambat";
-            hitungTerlambat++;
           } else {
             grupLog[key].statusKet = "Tepat Waktu";
-            hitungHadirTepatWaktu++;
           }
         } else if (tipeKecil === "pulang") {
           grupLog[key].jamPulang = jam;
-          hitungPulang++;
-          if (grupLog[key].statusKet === "-" || grupLog[key].statusKet === "") {
-            grupLog[key].statusKet = "Tepat Waktu";
-            hitungHadirTepatWaktu++;
-          }
         } else if (["sakit", "izin", "alpa"].includes(tipeKecil)) {
           grupLog[key].statusKet = l.tipe; 
         }
       });
 
-      // Sinkronisasi total hadir (guru yang melakukan tap absen)
+      // HITUNG STATISTIK MURNI BERDASARKAN HASIL AKHIR REKAP GRUPLOG
+      Object.values(grupLog).forEach(g => {
+        const statusKecil = g.statusKet.toLowerCase();
+        if (statusKecil === "tepat waktu") {
+          hitungHadirTepatWaktu++;
+        } else if (statusKecil === "terlambat") {
+          hitungTerlambat++;
+        }
+        
+        if (g.jamPulang !== "-") {
+          hitungPulang++;
+        }
+      });
+
       let totalHadirHariIni = hitungHadirTepatWaktu + hitungTerlambat;
 
       if(userRole === 'admin') {
@@ -424,7 +432,7 @@
           let badgeStatus = "";
           const statusKecil = g.statusKet.toLowerCase();
           
-          if (statusKecil === "tepat waktu" || statusKecil === "hadir") {
+          if (statusKecil === "tepat waktu") {
             badgeStatus = `<span class="bg-emerald-100 text-emerald-800 text-xs px-2.5 py-0.5 rounded-full font-semibold">Tepat Waktu</span>`;
           } else if (statusKecil === "terlambat") {
             badgeStatus = `<span class="bg-amber-100 text-amber-800 text-xs px-2.5 py-0.5 rounded-full font-semibold">Terlambat</span>`;
@@ -456,7 +464,6 @@
           tGuru.innerHTML += `<tr class="border-b border-slate-100"><td class="p-3 font-mono text-xs">${g.nip}</td><td class="p-3 font-medium">${g.nama}</td><td class="p-3">${g.jabatan}</td><td class="p-3 text-center"><button onclick="openQRModal('${g.nip}', '${g.nama}')" class="bg-slate-100 hover:bg-blue-50 text-slate-700 hover:text-blue-600 p-2 rounded-xl transition"><i class="fa-solid fa-qrcode"></i></button></td></tr>`;
         });
 
-        // Gambar ulang grafik Donat Admin berdasarkan data hitungan lokal yang valid
         let belumAbsenAdmin = res.stats.totalGuru - totalHadirHariIni;
         renderChart('chartKehadiran', chartInstance, hitungHadirTepatWaktu, hitungTerlambat, belumAbsenAdmin < 0 ? 0 : belumAbsenAdmin);
       
@@ -475,13 +482,18 @@
         res.logs.forEach(l => {
           const jamLog = l.timestamp.split(' ')[1] || "";
           let statusText = "";
+          
           if (l.tipe.toLowerCase() === "masuk") {
             statusText = jamLog.slice(0, 5) > configMasukRaw ? `<span class="text-amber-600 font-semibold">[Terlambat]</span>` : `<span class="text-emerald-600 font-semibold">[Tepat Waktu]</span>`;
+          } else if (l.tipe.toLowerCase() === "pulang") {
+            statusText = `<span class="text-blue-600 font-semibold">[Pulang]</span>`;
+          } else {
+            statusText = `<span class="text-purple-600 font-semibold">[${l.tipe}]</span>`;
           }
+          
           fLog.innerHTML += `<tr class="hover:bg-slate-50"><td class="p-3 text-xs text-slate-400 font-mono">${jamLog}</td><td class="p-3 text-slate-900"><strong>${l.nama}</strong> tercatat <strong>${l.tipe}</strong> ${statusText}</td></tr>`;
         });
 
-        // Gambar ulang grafik Donat Kepsek berdasarkan data hitungan lokal yang valid
         let belumAbsenKepsek = res.stats.totalGuru - totalHadirHariIni;
         renderChart('kepsekChart', kChartInstance, hitungHadirTepatWaktu, hitungTerlambat, belumAbsenKepsek < 0 ? 0 : belumAbsenKepsek);
       }
@@ -532,16 +544,18 @@
       if (canvasId === 'kepsekChart') kChartInstance = newChart;
     }
 
+    // MODUL VALIDASI WAKTU UTK KAMERA
     function startScanner() {
       const tipe = document.getElementById("absen-tipe").value;
       
       if (tipe.toLowerCase() === "pulang") {
         const sekarang = new Date();
         const jamSekarang = String(sekarang.getHours()).padStart(2, '0') + ":" + String(sekarang.getMinutes()).padStart(2, '0');
-        const batasPulang = document.getElementById("config-pulang").value || "14:00";
+        const batasPulang = globalConfigPulang;
+        
         if (jamSekarang < batasPulang) {
-          const konfirmasi = confirm("⚠️ Peringatan: Saat ini baru jam " + jamSekarang + ".\nBelum memasuki waktu pulang resmi (" + batasPulang + ").\nApakah Anda yakin ingin tetap melakukan absensi pulang duluan?");
-          if (!konfirmasi) return;
+          const konfirmasi = confirm("⚠️ Peringatan: Saat ini baru jam " + jamSekarang + ".\nBelum memasuki waktu pulang resmi sekolah (" + batasPulang + ").\nApakah Anda yakin ingin tetap mengizinkan absensi pulang dipercepat?");
+          if (!konfirmasi) { return; } // TOMBOL CANCEL BERHASIL MEMBLOKIR PROSES SCAN
         }
       }
 
@@ -552,6 +566,7 @@
       });
     }
 
+    // MODUL VALIDASI WAKTU UTK INPUT LOG MANUAL
     function handleAbsenManual(e) {
       e.preventDefault();
       const tipe = document.getElementById("manual-tipe").value;
@@ -559,10 +574,11 @@
       if (tipe.toLowerCase() === "pulang") {
         const sekarang = new Date();
         const jamSekarang = String(sekarang.getHours()).padStart(2, '0') + ":" + String(sekarang.getMinutes()).padStart(2, '0');
-        const batasPulang = document.getElementById("config-pulang").value || "14:00";
+        const batasPulang = globalConfigPulang;
+        
         if (jamSekarang < batasPulang) {
-          const konfirmasi = confirm("⚠️ Peringatan: Saat ini baru jam " + jamSekarang + ".\nBelum memasuki waktu pulang resmi (" + batasPulang + ").\nApakah Anda yakin ingin tetap memproses log absen pulang ini?");
-          if (!konfirmasi) return;
+          const konfirmasi = confirm("⚠️ Peringatan: Saat ini baru jam " + jamSekarang + ".\nBelum memasuki waktu pulang resmi sekolah (" + batasPulang + ").\nApakah Anda yakin ingin tetap memproses log absen pulang ini?");
+          if (!konfirmasi) { return; } // TOMBOL CANCEL BERHASIL MEMBLOKIR SUBMIT MANUAL
         }
       }
       
