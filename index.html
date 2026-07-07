@@ -497,7 +497,7 @@
       if(res.success) refreshData();
     }
 
-    // METODE SAKTI CETAK PDF NATIVE BROWSER (ANTI CRASH)
+    // METODE SAKTI CETAK PDF NATIVE BROWSER (DIAMANKAN DARI TAG BREAKING)
     function downloadPDF() {
       const element = document.getElementById('printable-area');
       
@@ -506,36 +506,22 @@
         return;
       }
 
-      // Membuat window cetak baru
       const windowCetak = window.open('', '_blank', 'height=600,width=800');
       
-      windowCetak.document.write(`
-        <html>
-          <head>
-            <title>Laporan Absensi Guru - ${new Date().toISOString().slice(0,10)}</title>
-            <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"><\/script>
-            <style>
-              @page { size: A4 portrait; margin: 20mm; }
-              body { font-family: sans-serif; background: white; color: #000; }
-            </style>
-          </head>
-          <body class="p-6">
-            <div class="text-center mb-6">
-              <h1 class="text-2xl font-bold text-slate-900">LAPORAN AKTIVITAS ABSENSI GURU</h1>
-              <p class="text-sm text-slate-500">Dicetak otomatis pada: ${new Date().toLocaleString('id-ID')}</p>
-              <hr class="my-4 border-slate-300">
-            </div>
-            <div>
-              ${element.innerHTML}
-            </div>
-          </body>
-        </html>
-      `);
+      windowCetak.document.write('<html><head><title>Laporan Absensi Guru - ' + new Date().toISOString().slice(0,10) + '</title>');
+      windowCetak.document.write('<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">');
+      windowCetak.document.write('<style>@page { size: A4 portrait; margin: 20mm; } body { font-family: sans-serif; background: white; color: #000; }</style></head>');
+      windowCetak.document.write('<body class="p-4">');
+      windowCetak.document.write('<div class="text-center mb-4">');
+      windowCetak.document.write('<h2 class="fw-bold">LAPORAN AKTIVITAS ABSENSI GURU</h2>');
+      windowCetak.document.write('<p class="text-secondary">Dicetak otomatis pada: ' + new Date().toLocaleString('id-ID') + '</p><hr>');
+      windowCetak.document.write('</div><div>');
+      windowCetak.document.write(element.innerHTML);
+      windowCetak.document.write('</div></body></html>');
       
       windowCetak.document.close();
       windowCetak.focus();
       
-      // Delay sedikit agar engine browser sempat merender tabel
       setTimeout(function() {
         windowCetak.print();
         windowCetak.close();
@@ -552,7 +538,7 @@
     function closeQRModal() { document.getElementById("qr-modal").classList.add("hidden"); }
     function printCard() {
       const w = window.open();
-      w.document.write(`<html><body onload="window.print(); window.close();" style="text-align:center;font-family:sans-serif;padding:30px;"><div style="border:2px solid #ccc;padding:20px;border-radius:12px;display:inline-block;background:#fafafa;">\${document.getElementById("modal-print-area").innerHTML}</div></body></html>`);
+      w.document.write('<html><body onload="window.print(); window.close();" style="text-align:center;font-family:sans-serif;padding:30px;"><div style="border:2px solid #ccc;padding:20px;border-radius:12px;display:inline-block;background:#fafafa;">' + document.getElementById("modal-print-area").innerHTML + '</div></body></html>');
       w.document.close();
     }
     function simpanMentoring(e) {
