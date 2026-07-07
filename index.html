@@ -305,7 +305,7 @@
 
   <script>
     // MASUKKAN URL GOOGLE APPS SCRIPT DEPLOYMENT TERBARUMU DI SINI
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzMZe0OI7gNllrD09vfwvK2EGpHyeTMfUH6oWW8PnCBVhqoExtT5xyIf0lQtFiBfmCKZw/exec";
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzf17-_IxeyJ4rihpVt6lwu_dNNcxHcC_yaieGkw2eduN3y_v6KJ4h7jGLJGWZWu6cokw/exec";
 
     let chartInstance = null;
     let kChartInstance = null;
@@ -358,7 +358,7 @@
           document.getElementById("kepsek-profile-name").innerText = userName;
           switchKepsekTab('kepsek-monitoring');
         }
-        refreshData();
+        await refreshData();
       } else {
         errMsg.innerText = response.message;
         errMsg.classList.remove("hidden");
@@ -371,7 +371,7 @@
 
     async function refreshData() {
       const res = await panggilAPI("getDashboardData");
-      if(!res.stats) return;
+      if(!res || !res.stats) return;
 
       databaseGuruGlobal = res.gurus || [];
 
@@ -476,7 +476,7 @@
         });
 
         let belumAbsenAdmin = res.stats.totalGuru - totalHadirHariIni;
-        renderChart('chartKehadiran', chartInstance, hitungHadirTepatWaktu, hitungTerlambat, belumAbsenAdmin < 0 ? 0 : belumAbsenAdmin);
+        renderChart('chartKehadiran', 'admin', hitungHadirTepatWaktu, hitungTerlambat, belumAbsenAdmin < 0 ? 0 : belumAbsenAdmin);
       
       } else if(userRole === 'kepsek') {
         document.getElementById("k-stat-total").innerText = res.stats.totalGuru;
@@ -507,11 +507,14 @@
         // Tampilkan Riwayat Catatan Mentoring / Evaluasi
         const tMentoring = document.getElementById("table-mentoring-body");
         tMentoring.innerHTML = (!res.mentoringLogs || res.mentoringLogs.length === 0) ? `<tr><td colspan="3" class="p-4 text-center text-slate-400">Belum ada riwayat catatan pembinaan.</td></tr>` : "";
-        if (res.mentoringLogs) {
-          res.mentoringLogs.asReversed().forEach(m => {
+        
+        if (res.mentoringLogs && res.mentoringLogs.length > 0) {
+          // Membuat salinan log lalu membalik urutannya agar arsip terbaru di atas
+          const logSalinan = [...res.mentoringLogs].reverse();
+          logSalinan.forEach(m => {
             tMentoring.innerHTML += `
               <tr class="hover:bg-slate-50 text-xs">
-                <td class="p-3 text-slate-500 whitespace-nowrap font-medium">${m.tanggal}</td>
+                <td class="p-3 text-slate-500 font-medium">${m.tanggal}</td>
                 <td class="p-3 text-slate-900 font-bold">${m.nama}<br><span class="text-[10px] text-slate-400 font-mono font-normal">NIP: ${m.nip}</span></td>
                 <td class="p-3 text-slate-700 italic bg-amber-50/40 rounded-lg">${m.catatan}</td>
               </tr>
@@ -520,7 +523,7 @@
         }
 
         let belumAbsenKepsek = res.stats.totalGuru - totalHadirHariIni;
-        renderChart('kepsekChart', kChartInstance, hitungHadirTepatWaktu, hitungTerlambat, belumAbsenKepsek < 0 ? 0 : belumAbsenKepsek);
+        renderChart('kepsekChart', 'kepsek', hitungHadirTepatWaktu, hitungTerlambat, belumAbsenKepsek < 0 ? 0 : belumAbsenKepsek);
       }
     }
 
@@ -529,7 +532,8 @@
       e.preventDefault();
       const selectGuru = document.getElementById("mentoring-guru");
       const nipGuru = selectGuru.value;
-      const namaGuru = selectGuru.options[selectGuru.selectedIndex].text.split(' (')[0];
+      const textGuru = selectGuru.options[selectGuru.selectedIndex].text;
+      const namaGuru = textGuru.split(' (')[0];
       const isiCatatan = document.getElementById("mentoring-catatan").value;
       const btn = document.getElementById("btn-submit-mentoring");
 
@@ -546,11 +550,11 @@
 
       if (res.success) {
         document.getElementById("mentoring-catatan").value = "";
-        refreshData();
+        await refreshData();
       }
     }
 
-    // CETAK LAPORAN MENJADI PDF DINAMIS (BISA DIGUNAKAN DI SEMUA TABEL)
+    // CETAK LAPORAN MENJADI PDF DINAMIS
     function downloadPDF(elementId, namaFile) {
       const element = document.getElementById(elementId);
       if (!element || element.innerText.includes("Belum ada data") || element.innerText.includes("Belum ada riwayat")) {
@@ -612,22 +616,25 @@
       });
     }
 
-    function renderChart(canvasId, instance, tepat, lambat, tidakHadir) {
-      const ctx = document.getElementById(canvasId).getContext('2d');
-      if (canvasId === 'chartKehadiran' && chartInstance) { chartInstance.destroy(); }
-      if (canvasId === 'kepsekChart' && kChartInstance) { kChartInstance.destroy(); }
+    function renderChart(canvasId, tipeRole, tepat, lambat, tidakHadir) {
+      const el = document.getElementById(canvasId);
+      if (!el) return;
+      const ctx = el.getContext('2d');
       
-      const newChart = new Chart(ctx, {
+      if (tipeRole === 'admin' && chartInstance) { chartInstance.destroy(); chartInstance = null; }
+      if (tipeRole === 'kepsek' && kChartInstance) { kChartInstance.destroy(); kChartInstance = null; }
+      
+      const configChart = {
         type: 'doughnut',
         data: {
           labels: ['Tepat Waktu', 'Terlambat', 'Belum Absen'],
           datasets: [{ data: [tepat, lambat, tidakHadir], backgroundColor: ['#10b981', '#f59e0b', '#cbd5e1'], borderWidth: 0 }]
         },
         options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
-      });
+      };
 
-      if (canvasId === 'chartKehadiran') chartInstance = newChart;
-      if (canvasId === 'kepsekChart') kChartInstance = newChart;
+      if (tipeRole === 'admin') chartInstance = new Chart(ctx, configChart);
+      if (tipeRole === 'kepsek') kChartInstance = new Chart(ctx, configChart);
     }
 
     function startScanner() {
@@ -651,8 +658,8 @@
       e.preventDefault();
       const tipe = document.getElementById("manual-tipe").value;
       if (tipe.toLowerCase() === "pulang") {
-        const sekarang = new Date();
-        const jamSekarang = String(sekarang.getHours()).padStart(2, '0') + ":" + String(sekarang.getMinutes()).padStart(2, '0');
+        const sewing = new Date();
+        const jamSekarang = String(sewing.getHours()).padStart(2, '0') + ":" + String(sewing.getMinutes()).padStart(2, '0');
         if (jamSekarang < globalConfigPulang) {
           const konfirmasi = confirm("⚠️ Belum memasuki jam pulang resmi (" + globalConfigPulang + "). Lanjutkan?");
           if (!konfirmasi) return;
@@ -670,7 +677,7 @@
       if(res.success) {
         fb.className = "mt-4 p-3 rounded-xl text-sm font-medium text-center bg-emerald-100 text-emerald-800 block";
         document.getElementById("manual-nip").value = "";
-        refreshData();
+        await refreshData();
       } else {
         fb.className = "mt-4 p-3 rounded-xl text-sm font-medium text-center bg-red-100 text-red-800 block";
       }
@@ -685,7 +692,7 @@
         document.getElementById("guru-nip").value = "";
         document.getElementById("guru-nama").value = "";
         document.getElementById("guru-jabatan").value = "";
-        refreshData();
+        await refreshData();
       }
     }
 
@@ -693,7 +700,7 @@
       e.preventDefault();
       const res = await panggilAPI("simpanPengaturan", [document.getElementById("config-masuk").value, document.getElementById("config-pulang").value]);
       alert(res.message); 
-      if(res.success) refreshData();
+      if(res.success) await refreshData();
     }
 
     function openQRModal(nip, nama) {
