@@ -343,34 +343,7 @@
       location.reload();
     }
 
-    function switchAdminTab(tabId) {
-      document.querySelectorAll('.admin-tab-content').forEach(c => c.classList.add('hidden'));
-      document.getElementById(tabId).classList.remove('hidden');
-      
-      document.querySelectorAll('.admin-tab-btn').forEach(b => {
-        if(b.getAttribute('data-target') === tabId) {
-          b.className = "admin-tab-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition text-blue-400 bg-slate-800";
-        } else {
-          b.className = "admin-tab-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition text-slate-300 hover:bg-slate-800";
-        }
-      });
-      if(html5QrcodeScanner) { html5QrcodeScanner.clear(); }
-    }
-
-    function switchKepsekTab(tabId) {
-      document.querySelectorAll('.kepsek-tab-content').forEach(c => c.classList.add('hidden'));
-      document.getElementById(tabId).classList.remove('hidden');
-
-      document.querySelectorAll('.kepsek-tab-btn').forEach(b => {
-        if(b.getAttribute('data-target') === tabId) {
-          b.className = "kepsek-tab-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition text-emerald-400 bg-slate-800";
-        } else {
-          b.className = "kepsek-tab-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition text-slate-300 hover:bg-slate-800";
-        }
-      });
-    }
-
-    // ENGINE AMBIL & RENDER DATA DATABASE (FIX LOGIKA TERLAMBAT & KETERANGAN MANUAL)
+    // ENGINE AMBIL & RENDER DATA DATABASE (FIX FORMAT JAM KERJA & LOGIKA STATUS)
     async function refreshData() {
       const res = await panggilAPI("getDashboardData");
       if(!res.stats) return;
@@ -381,8 +354,21 @@
         document.getElementById("stat-lambat").innerText = res.stats.terlambat;
         document.getElementById("stat-pulang").innerText = res.stats.pulang;
         
-        document.getElementById("config-masuk").value = res.config.Jam_Masuk || "";
-        document.getElementById("config-pulang").value = res.config.Jam_Pulang || "";
+        // --- PROSES DAN BERSIHKAN FORMAT JAM CONFIG ---
+        let configMasukRaw = res.config.Jam_Masuk || "07:00";
+        let configPulangRaw = res.config.Jam_Pulang || "14:00";
+
+        // Pembersihan jika Sheets mengirim objek format Tanggal ISO (1899-12-30T00:52:48.000Z)
+        if (configMasukRaw.includes("T")) {
+          configMasukRaw = configMasukRaw.split("T")[1].slice(0, 5);
+        }
+        if (configPulangRaw.includes("T")) {
+          configPulangRaw = configPulangRaw.split("T")[1].slice(0, 5);
+        }
+
+        document.getElementById("config-masuk").value = configMasukRaw;
+        document.getElementById("config-pulang").value = configPulangRaw;
+        // ----------------------------------------------
 
         const tLog = document.getElementById("table-log-body");
         tLog.innerHTML = res.logs.length === 0 ? `<tr><td colspan="6" class="p-4 text-center text-slate-400">Belum ada data</td></tr>` : "";
@@ -409,20 +395,21 @@
           if (tipeKecil === "masuk") {
             grupLog[key].jamMasuk = jam;
             
-            // Perbaikan Poin 1: Validasi Terlambat Frontend vs Config Jam Kerja
-            const batasMasuk = document.getElementById("config-masuk").value || "07:00";
-            if (jam.slice(0,5) > batasMasuk) {
+            // Perbaikan Validasi Terlambat Frontend dengan Jam Bersih
+            const jamMenitAbsen = jam.slice(0, 5); // Ambil format "07:35"
+            if (jamMenitAbsen > configMasukRaw) {
               grupLog[key].statusKet = "Terlambat";
             } else {
               grupLog[key].statusKet = "Tepat Waktu";
             }
           } else if (tipeKecil === "pulang") {
             grupLog[key].jamPulang = jam;
-            if(grupLog[key].statusKet === "-" || grupLog[key].statusKet === "") {
+            // Jika status masih kosong atau tanda strip, beri status bawaan
+            if (grupLog[key].statusKet === "-" || grupLog[key].statusKet === "") {
               grupLog[key].statusKet = "Tepat Waktu";
             }
           } else if (["sakit", "izin", "alpa"].includes(tipeKecil)) {
-            // Perbaikan Poin 2: Mengunci Keterangan Khusus Manual agar tidak ditimpa "Tepat Waktu"
+            // Perbaikan Logika: Jika manual (Sakit/Izin/Alpa), jangan dipaksa jadi "Tepat Waktu"
             grupLog[key].statusKet = l.tipe; 
           }
         });
@@ -486,6 +473,33 @@
       }
     }
 
+    function switchAdminTab(tabId) {
+      document.querySelectorAll('.admin-tab-content').forEach(c => c.classList.add('hidden'));
+      document.getElementById(tabId).classList.remove('hidden');
+      
+      document.querySelectorAll('.admin-tab-btn').forEach(b => {
+        if(b.getAttribute('data-target') === tabId) {
+          b.className = "admin-tab-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition text-blue-400 bg-slate-800";
+        } else {
+          b.className = "admin-tab-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition text-slate-300 hover:bg-slate-800";
+        }
+      });
+      if(html5QrcodeScanner) { html5QrcodeScanner.clear(); }
+    }
+
+    function switchKepsekTab(tabId) {
+      document.querySelectorAll('.kepsek-tab-content').forEach(c => c.classList.add('hidden'));
+      document.getElementById(tabId).classList.remove('hidden');
+
+      document.querySelectorAll('.kepsek-tab-btn').forEach(b => {
+        if(b.getAttribute('data-target') === tabId) {
+          b.className = "kepsek-tab-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition text-emerald-400 bg-slate-800";
+        } else {
+          b.className = "kepsek-tab-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition text-slate-300 hover:bg-slate-800";
+        }
+      });
+    }
+
     function renderChart(canvasId, instance, tepat, lambat, tidakHadir) {
       const ctx = document.getElementById(canvasId).getContext('2d');
       if (canvasId === 'chartKehadiran' && chartInstance) { chartInstance.destroy(); }
@@ -507,7 +521,7 @@
     function startScanner() {
       const tipe = document.getElementById("absen-tipe").value;
       
-      // Perbaikan Poin 3: Intersepsi Validasi Waktu Pulang pada Scan QR Kamera
+      // Validasi Intersepsi: Jika pilih pulang tapi belum waktunya pulang
       if (tipe.toLowerCase() === "pulang") {
         const sekarang = new Date();
         const jamSekarang = String(sekarang.getHours()).padStart(2, '0') + ":" + String(sekarang.getMinutes()).padStart(2, '0');
@@ -529,7 +543,7 @@
       e.preventDefault();
       const tipe = document.getElementById("manual-tipe").value;
       
-      // Perbaikan Poin 3: Intersepsi Validasi Waktu Pulang pada Input Manual Admin
+      // Validasi Intersepsi: Form Input Log Manual untuk Tipe Pulang
       if (tipe.toLowerCase() === "pulang") {
         const sekarang = new Date();
         const jamSekarang = String(sekarang.getHours()).padStart(2, '0') + ":" + String(sekarang.getMinutes()).padStart(2, '0');
@@ -600,8 +614,6 @@
       windowCetak.document.write('table { width: 100%; margin-top: 15px; border-collapse: collapse; font-size: 13px; }');
       windowCetak.document.write('th { background-color: #f2f2f2 !important; color: #000 !important; font-weight: bold; text-align: center; border: 1px solid #000 !important; padding: 10px !important; }');
       windowCetak.document.write('td { border: 1px solid #000 !important; padding: 8px 10px !important; text-align: left; }');
-      windowCetak.document.write('.text-center-td { text-align: center !important; }');
-      windowCetak.document.write('span { background: none !important; color: #000 !important; padding: 0 !important; font-weight: bold; }');
       windowCetak.document.write('</style></head>');
       windowCetak.document.write('<body class="p-2">');
       windowCetak.document.write('<div class="kop-surat">');
