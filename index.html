@@ -276,14 +276,33 @@
 
 
   <script>
+    // ⚠️ MASUKKAN URL WEB APP GOOGLE APSS SCRIPT KAMU DI SINI (YANG BERAKHIRAN /exec)
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbw_jA9A2Pe0uE_uCB-BO0smRfGEkOm_JcYZzhwIT2ZTAenmYVW0TbF4SFUakLQrL6aSgA/exec";
+
     let chartInstance = null;
     let kChartInstance = null;
     let html5QrcodeScanner = null;
     let userRole = '';
     let userName = '';
 
+    // Fungsi Global untuk menjembatani GitHub dengan Google Sheets via Fetch API
+    async function panggilAPI(fungsiName, argumenArray = []) {
+      try {
+        const respons = await fetch(WEB_APP_URL, {
+          method: "POST",
+          mode: "cors",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({ fungsi: fungsiName, args: argumenArray })
+        });
+        return await respons.json();
+      } catch (error) {
+        console.error("Gagal Request API:", error);
+        return { success: false, message: "Koneksi ke Google Database terputus!" };
+      }
+    }
+
     // ROUTING & AUTH LOGIC
-    function handleLogin(e) {
+    async function handleLogin(e) {
       e.preventDefault();
       const user = document.getElementById("username").value;
       const pass = document.getElementById("password").value;
@@ -294,32 +313,30 @@
       btn.innerHTML = `<i class="fa-solid fa-circle-notch animate-spin"></i> Memvalidasi...`;
       errMsg.classList.add("hidden");
       
-      google.script.run
-        .withSuccessHandler(function(response) {
-          if (response.success) {
-            userRole = response.role;
-            userName = response.name;
-            
-            document.getElementById("page-login").classList.add("hidden");
-            
-            if (userRole === "admin") {
-              document.getElementById("page-admin").classList.remove("hidden");
-              document.getElementById("admin-profile-name").innerText = userName;
-              switchAdminTab('tab-scan');
-            } else {
-              document.getElementById("page-kepsek").classList.remove("hidden");
-              document.getElementById("kepsek-profile-name").innerText = userName;
-              switchKepsekTab('kepsek-monitoring');
-            }
-            refreshData();
-          } else {
-            errMsg.innerText = response.message;
-            errMsg.classList.remove("hidden");
-            btn.disabled = false;
-            btn.innerHTML = "Masuk Ke Sistem";
-          }
-        })
-        .loginUser(user, pass);
+      const response = await panggilAPI("loginUser", [user, pass]);
+      
+      if (response.success) {
+        userRole = response.role;
+        userName = response.name;
+        
+        document.getElementById("page-login").classList.add("hidden");
+        
+        if (userRole === "admin") {
+          document.getElementById("page-admin").classList.remove("hidden");
+          document.getElementById("admin-profile-name").innerText = userName;
+          switchAdminTab('tab-scan');
+        } else {
+          document.getElementById("page-kepsek").classList.remove("hidden");
+          document.getElementById("kepsek-profile-name").innerText = userName;
+          switchKepsekTab('kepsek-monitoring');
+        }
+        refreshData();
+      } else {
+        errMsg.innerText = response.message;
+        errMsg.classList.remove("hidden");
+        btn.disabled = false;
+        btn.innerHTML = "Masuk Ke Sistem";
+      }
     }
 
     function logout() {
@@ -356,58 +373,59 @@
     }
 
     // ENGINE AMBIL & RENDER DATA DATABASE
-    function refreshData() {
-      google.script.run.withSuccessHandler(function(res) {
-        if(userRole === 'admin') {
-          document.getElementById("stat-total").innerText = res.stats.totalGuru;
-          document.getElementById("stat-hadir").innerText = res.stats.hadir;
-          document.getElementById("stat-lambat").innerText = res.stats.terlambat;
-          document.getElementById("stat-pulang").innerText = res.stats.pulang;
-          
-          document.getElementById("config-masuk").value = res.config.Jam_Masuk || "";
-          document.getElementById("config-pulang").value = res.config.Jam_Pulang || "";
+    async function refreshData() {
+      const res = await panggilAPI("getDashboardData");
+      if(!res.stats) return;
 
-          // Render Tabel Laporan Admin
-          const tLog = document.getElementById("table-log-body");
-          tLog.innerHTML = res.logs.length === 0 ? `<tr><td colspan="5" class="p-4 text-center text-slate-400">Belum ada data</td></tr>` : "";
-          res.logs.forEach(l => {
-            let statusBadge = l.status === "Terlambat" ? `<span class="bg-amber-100 text-amber-800 text-xs px-2.5 py-0.5 rounded-full font-medium">${l.status}</span>` : 
-                              l.status === "Tepat Waktu" ? `<span class="bg-emerald-100 text-emerald-800 text-xs px-2.5 py-0.5 rounded-full font-medium">${l.status}</span>` : `<span class="text-slate-400">-</span>`;
-            let tipeBadge = l.tipe === "Masuk" ? `<span class="text-emerald-600 font-bold">Masuk</span>` : `<span class="text-blue-600 font-bold">Pulang</span>`;
-            tLog.innerHTML += `<tr class="border-b border-slate-100"><td class="p-3">${l.timestamp}</td><td class="p-3 font-mono text-xs">${l.nip}</td><td class="p-3 font-medium">${l.nama}</td><td class="p-3">${tipeBadge}</td><td class="p-3">${statusBadge}</td></tr>`;
-          });
-
-          // Render Tabel Master Guru Admin
-          const tGuru = document.getElementById("table-guru-body");
-          tGuru.innerHTML = "";
-          res.gurus.forEach(g => {
-            tGuru.innerHTML += `<tr class="border-b border-slate-100"><td class="p-3 font-mono text-xs">${g.nip}</td><td class="p-3 font-medium">${g.nama}</td><td class="p-3">${g.jabatan}</td><td class="p-3 text-center"><button onclick="openQRModal('${g.nip}', '${g.nama}')" class="bg-slate-100 hover:bg-blue-50 text-slate-700 hover:text-blue-600 p-2 rounded-xl transition"><i class="fa-solid fa-qrcode"></i></button></td></tr>`;
-          });
-
-          renderChart('chartKehadiran', chartInstance, res.stats.hadir - res.stats.terlambat, res.stats.terlambat, res.stats.totalGuru - res.stats.hadir);
+      if(userRole === 'admin') {
+        document.getElementById("stat-total").innerText = res.stats.totalGuru;
+        document.getElementById("stat-hadir").innerText = res.stats.hadir;
+        document.getElementById("stat-lambat").innerText = res.stats.terlambat;
+        document.getElementById("stat-pulang").innerText = res.stats.pulang;
         
-        } else if(userRole === 'kepsek') {
-          document.getElementById("k-stat-total").innerText = res.stats.totalGuru;
-          document.getElementById("k-stat-hadir").innerText = res.stats.hadir;
-          document.getElementById("k-stat-lambat").innerText = res.stats.terlambat;
-          document.getElementById("k-stat-pulang").innerText = res.stats.pulang;
+        document.getElementById("config-masuk").value = res.config.Jam_Masuk || "";
+        document.getElementById("config-pulang").value = res.config.Jam_Pulang || "";
 
-          // Dropdown Mentoring
-          const dropdown = document.getElementById("mentoring-guru");
-          dropdown.innerHTML = `<option value="">-- Pilih Guru --</option>`;
-          res.gurus.forEach(g => { dropdown.innerHTML += `<option value="${g.nip}">${g.nama}</option>`; });
+        // Render Tabel Laporan Admin
+        const tLog = document.getElementById("table-log-body");
+        tLog.innerHTML = res.logs.length === 0 ? `<tr><td colspan="5" class="p-4 text-center text-slate-400">Belum ada data</td></tr>` : "";
+        res.logs.forEach(l => {
+          let statusBadge = l.status === "Terlambat" ? `<span class="bg-amber-100 text-amber-800 text-xs px-2.5 py-0.5 rounded-full font-medium">${l.status}</span>` : 
+                            l.status === "Tepat Waktu" ? `<span class="bg-emerald-100 text-emerald-800 text-xs px-2.5 py-0.5 rounded-full font-medium">${l.status}</span>` : `<span class="text-slate-400">-</span>`;
+          let tipeBadge = l.tipe === "Masuk" ? `<span class="text-emerald-600 font-bold">Masuk</span>` : `<span class="text-blue-600 font-bold">Pulang</span>`;
+          tLog.innerHTML += `<tr class="border-b border-slate-100"><td class="p-3">${l.timestamp}</td><td class="p-3 font-mono text-xs">${l.nip}</td><td class="p-3 font-medium">${l.nama}</td><td class="p-3">${tipeBadge}</td><td class="p-3">${statusBadge}</td></tr>`;
+        });
 
-          // Live Feed Pantau
-          const fLog = document.getElementById("kepsek-table-log");
-          fLog.innerHTML = res.logs.length === 0 ? `<tr><td class="p-4 text-center text-slate-400">Belum ada aktivitas</td></tr>` : "";
-          res.logs.forEach(l => {
-            let statusText = l.status === "Terlambat" ? `<span class="text-amber-600 font-semibold">[Terlambat]</span>` : l.status === "Tepat Waktu" ? `<span class="text-emerald-600 font-semibold">[Tepat Waktu]</span>` : "";
-            fLog.innerHTML += `<tr class="hover:bg-slate-50"><td class="p-3 text-xs text-slate-400 font-mono">${l.timestamp.split(' ')[1]}</td><td class="p-3 text-slate-900"><strong>${l.nama}</strong> melakukan absen <strong>${l.tipe}</strong> ${statusText}</td></tr>`;
-          });
+        // Render Tabel Master Guru Admin
+        const tGuru = document.getElementById("table-guru-body");
+        tGuru.innerHTML = "";
+        res.gurus.forEach(g => {
+          tGuru.innerHTML += `<tr class="border-b border-slate-100"><td class="p-3 font-mono text-xs">${g.nip}</td><td class="p-3 font-medium">${g.nama}</td><td class="p-3">${g.jabatan}</td><td class="p-3 text-center"><button onclick="openQRModal('${g.nip}', '${g.nama}')" class="bg-slate-100 hover:bg-blue-50 text-slate-700 hover:text-blue-600 p-2 rounded-xl transition"><i class="fa-solid fa-qrcode"></i></button></td></tr>`;
+        });
 
-          renderChart('kepsekChart', kChartInstance, res.stats.hadir - res.stats.terlambat, res.stats.terlambat, res.stats.totalGuru - res.stats.hadir);
-        }
-      }).getDashboardData();
+        renderChart('chartKehadiran', chartInstance, res.stats.hadir - res.stats.terlambat, res.stats.terlambat, res.stats.totalGuru - res.stats.hadir);
+      
+      } else if(userRole === 'kepsek') {
+        document.getElementById("k-stat-total").innerText = res.stats.totalGuru;
+        document.getElementById("k-stat-hadir").innerText = res.stats.hadir;
+        document.getElementById("k-stat-lambat").innerText = res.stats.terlambat;
+        document.getElementById("k-stat-pulang").innerText = res.stats.pulang;
+
+        // Dropdown Mentoring
+        const dropdown = document.getElementById("mentoring-guru");
+        dropdown.innerHTML = `<option value="">-- Pilih Guru --</option>`;
+        res.gurus.forEach(g => { dropdown.innerHTML += `<option value="${g.nip}">${g.nama}</option>`; });
+
+        // Live Feed Pantau
+        const fLog = document.getElementById("kepsek-table-log");
+        fLog.innerHTML = res.logs.length === 0 ? `<tr><td class="p-4 text-center text-slate-400">Belum ada aktivitas</td></tr>` : "";
+        res.logs.forEach(l => {
+          let statusText = l.status === "Terlambat" ? `<span class="text-amber-600 font-semibold">[Terlambat]</span>` : l.status === "Tepat Waktu" ? `<span class="text-emerald-600 font-semibold">[Tepat Waktu]</span>` : "";
+          fLog.innerHTML += `<tr class="hover:bg-slate-50"><td class="p-3 text-xs text-slate-400 font-mono">${l.timestamp.split(' ')[1]}</td><td class="p-3 text-slate-900"><strong>${l.nama}</strong> melakukan absen <strong>${l.tipe}</strong> ${statusText}</td></tr>`;
+        });
+
+        renderChart('kepsekChart', kChartInstance, res.stats.hadir - res.stats.terlambat, res.stats.terlambat, res.stats.totalGuru - res.stats.hadir);
+      }
     }
 
     // GLOBAL CHART ENGINE
@@ -444,42 +462,40 @@
       prosesAbsensiData(document.getElementById("manual-nip").value, document.getElementById("manual-tipe").value);
     }
 
-    function prosesAbsensiData(nip, tipe) {
+    async function prosesAbsensiData(nip, tipe) {
       const fb = document.getElementById("scan-feedback");
       fb.className = "mt-4 p-3 rounded-xl text-sm font-medium text-center bg-slate-100 text-slate-800 block";
       fb.innerText = "Memproses absensi...";
 
-      google.script.run.withSuccessHandler(function(res) {
-        if(res.success) {
-          fb.className = "mt-4 p-3 rounded-xl text-sm font-medium text-center bg-emerald-100 text-emerald-800 block";
-          document.getElementById("manual-nip").value = "";
-          refreshData();
-        } else {
-          fb.className = "mt-4 p-3 rounded-xl text-sm font-medium text-center bg-red-100 text-red-800 block";
-        }
-        fb.innerText = res.message;
-      }).catatAbsen(nip, tipe);
+      const res = await panggilAPI("catatAbsen", [nip, tipe]);
+      if(res.success) {
+        fb.className = "mt-4 p-3 rounded-xl text-sm font-medium text-center bg-emerald-100 text-emerald-800 block";
+        document.getElementById("manual-nip").value = "";
+        refreshData();
+      } else {
+        fb.className = "mt-4 p-3 rounded-xl text-sm font-medium text-center bg-red-100 text-red-800 block";
+      }
+      fb.innerText = res.message;
     }
 
-    // INTEGRASI INPUT DATA DATA GURU & PDF EXPORT
-    function handleTambahGuru(e) {
+    // MANAGEMENT INTEGRATION
+    async function handleTambahGuru(e) {
       e.preventDefault();
-      google.script.run.withSuccessHandler(function(res) {
-        alert(res.message);
-        if(res.success) {
-          document.getElementById("guru-nip").value = "";
-          document.getElementById("guru-nama").value = "";
-          document.getElementById("guru-jabatan").value = "";
-          refreshData();
-        }
-      }).tambahGuru(document.getElementById("guru-nip").value, document.getElementById("guru-nama").value, document.getElementById("guru-jabatan").value);
+      const res = await panggilAPI("tambahGuru", [document.getElementById("guru-nip").value, document.getElementById("guru-nama").value, document.getElementById("guru-jabatan").value]);
+      alert(res.message);
+      if(res.success) {
+        document.getElementById("guru-nip").value = "";
+        document.getElementById("guru-nama").value = "";
+        document.getElementById("guru-jabatan").value = "";
+        refreshData();
+      }
     }
 
-    function handleSimpanConfig(e) {
+    async function handleSimpanConfig(e) {
       e.preventDefault();
-      google.script.run.withSuccessHandler(function(res) {
-        alert(res.message); if(res.success) refreshData();
-      }).simpanPengaturan(document.getElementById("config-masuk").value, document.getElementById("config-pulang").value);
+      const res = await panggilAPI("simpanPengaturan", [document.getElementById("config-masuk").value, document.getElementById("config-pulang").value]);
+      alert(res.message); 
+      if(res.success) refreshData();
     }
 
     function downloadPDF() {
