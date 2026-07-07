@@ -116,7 +116,12 @@
       <div id="tab-laporan" class="admin-tab-content space-y-4 md:space-y-6 hidden">
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
           <h2 class="text-xl md:text-2xl font-bold text-slate-900"><i class="fa-solid fa-chart-line mr-2 text-blue-600"></i>Laporan & Grafik</h2>
-          <button onclick="downloadPDF('printable-area', 'Laporan_Absensi_Guru')" class="w-full sm:w-auto bg-red-600 text-white font-medium px-4 py-2 rounded-xl text-xs md:text-sm hover:bg-red-700 transition flex items-center justify-center gap-2"><i class="fa-solid fa-file-pdf"></i> Unduh Laporan PDF</button>
+          <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+            <button onclick="handleManualRefresh(this)" class="w-full sm:w-auto bg-slate-200 hover:bg-slate-300 text-slate-700 font-medium px-4 py-2 rounded-xl text-xs md:text-sm transition flex items-center justify-center gap-2 cursor-pointer">
+              <i class="fa-solid fa-arrows-rotate"></i> <span>Sinkronisasi Data</span>
+            </button>
+            <button onclick="downloadPDF('printable-area', 'Laporan_Absensi_Guru')" class="w-full sm:w-auto bg-red-600 text-white font-medium px-4 py-2 rounded-xl text-xs md:text-sm hover:bg-red-700 transition flex items-center justify-center gap-2"><i class="fa-solid fa-file-pdf"></i> Unduh Laporan PDF</button>
+          </div>
         </div>
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
           <div class="bg-white p-3 md:p-4 rounded-xl border border-slate-200 shadow-sm"><p class="text-[10px] md:text-xs text-slate-500 font-semibold uppercase">Total Guru</p><p id="stat-total" class="text-lg md:text-2xl font-bold text-slate-900 mt-1">0</p></div>
@@ -233,7 +238,12 @@
       </div>
 
       <div id="kepsek-monitoring" class="kepsek-tab-content space-y-4 md:space-y-6">
-        <h2 class="text-xl md:text-2xl font-bold text-slate-900"><i class="fa-solid fa-chart-pie mr-2 text-emerald-600"></i>Pemantauan Aktivitas & Analisis Kerja</h2>
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+          <h2 class="text-xl md:text-2xl font-bold text-slate-900"><i class="fa-solid fa-chart-pie mr-2 text-emerald-600"></i>Pemantauan Aktivitas & Analisis Kerja</h2>
+          <button onclick="handleManualRefresh(this)" class="w-full sm:w-auto bg-slate-200 hover:bg-slate-300 text-slate-700 font-medium px-4 py-2 rounded-xl text-xs md:text-sm transition flex items-center justify-center gap-2 cursor-pointer">
+            <i class="fa-solid fa-arrows-rotate"></i> <span>Sinkronisasi Data</span>
+          </button>
+        </div>
         
         <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
           <div class="bg-white p-3 md:p-4 rounded-xl border border-slate-200 shadow-sm"><p class="text-[10px] md:text-xs text-slate-500 font-semibold uppercase">Total Guru</p><p id="k-stat-total" class="text-lg md:text-2xl font-bold text-slate-900 mt-1">0</p></div>
@@ -403,6 +413,24 @@
 
     function logout() { location.reload(); }
 
+    // FUNGSI ANIMASI REFRESH DATA MANUAL SINKRONISASI
+    async function handleManualRefresh(buttonEl) {
+      const icon = buttonEl.querySelector('i');
+      const text = buttonEl.querySelector('span');
+      
+      buttonEl.disabled = true;
+      icon.classList.add('animate-spin');
+      text.innerText = "Menyinkronkan...";
+      
+      await refreshData();
+      
+      setTimeout(() => {
+        buttonEl.disabled = false;
+        icon.classList.remove('animate-spin');
+        text.innerText = "Sinkronisasi Data";
+      }, 600);
+    }
+
     async function refreshData() {
       const res = await panggilAPI("getDashboardData");
       if(!res || !res.stats) return;
@@ -425,20 +453,17 @@
       let hitungTerlambat = 0;
       let hitungPulang = 0;
 
-      // Peta agregasi untuk analisis akumulasi (Reward & Punishment)
       const guruSkorDisiplin = {}; 
       const guruSkorTerlambat = {};
       
-      // Petakan dulu semua nama guru dari database biar nama yang muncul valid
       res.gurus.forEach(g => {
         guruSkorDisiplin[g.nip] = { nama: g.nama, total: 0 };
         guruSkorTerlambat[g.nip] = { nama: g.nama, total: 0 };
       });
 
-      // Peta log harian untuk hitung grafik tren tanggal
       const trenHarianLog = {};
-
       const grupLog = {};
+
       res.logs.forEach(l => {
         const bagianWaktu = l.timestamp.split(' ');
         const tanggal = bagianWaktu[0] || l.timestamp;
@@ -460,8 +485,8 @@
           trenHarianLog[tanggal] = { tepat: 0, terlambat: 0 };
         }
         
-        const tipeKecil = l.tipe.toLowerCase();
-        if (tipeKecil === "masuk") {
+        const tipeKecKecil = l.tipe.toLowerCase();
+        if (tipeKecKecil === "masuk") {
           grupLog[key].jamMasuk = jam;
           const jamMenitAbsen = jam.substring(0, 5);
           if (jamMenitAbsen > configMasukRaw) {
@@ -473,9 +498,9 @@
             trenHarianLog[tanggal].tepat++;
             if (guruSkorDisiplin[l.nip]) guruSkorDisiplin[l.nip].total++;
           }
-        } else if (tipeKecil === "pulang") {
+        } else if (tipeKecKecil === "pulang") {
           grupLog[key].jamPulang = jam;
-        } else if (["sakit", "izin", "alpa"].includes(tipeKecil)) {
+        } else if (["sakit", "izin", "alpa"].includes(tipeKecKecil)) {
           grupLog[key].statusKet = l.tipe; 
         }
       });
@@ -489,7 +514,7 @@
 
       let totalHadirHariIni = hitungHadirTepatWaktu + hitungTerlambat;
 
-      // PROSES PINDAI SKOR REWARD & PUNISHMENT (MENCARI NILAI TERTINGGI)
+      // PROSES PINDAI STRATEGIS REWARD & PUNISHMENT KEPSEK
       let namaTopDisiplin = "Belum Ada Data";
       let skorTopDisiplin = 0;
       Object.entries(guruSkorDisiplin).forEach(([nip, item]) => {
@@ -558,7 +583,6 @@
         document.getElementById("k-stat-lambat").innerText = hitungTerlambat;
         document.getElementById("k-stat-pulang").innerText = hitungPulang;
 
-        // ISI DATA WIDGET STRATEGIS KEPSEK
         document.getElementById("top-disiplin-nama").innerText = namaTopDisiplin;
         document.getElementById("top-disiplin-skor").innerText = skorTopDisiplin > 0 ? `Hadir tepat waktu sebanyak ${skorTopDisiplin} kali` : "Belum terdeteksi record kehadiran";
         
@@ -600,7 +624,6 @@
           });
         }
 
-        // GENERATE DATA UNTUK TREN KEPSEK LINE CHART (7 LOG TERAKHIR)
         const sortedTanggal = Object.keys(trenHarianLog).sort().slice(-7);
         const dataTepatWaktu = [];
         const dataTerlambat = [];
@@ -701,7 +724,6 @@
       });
     }
 
-    // FUNGSI GRAFIK 1: Doughnut Chart Sisi Admin (Fokus Data Hari Ini)
     function renderAdminDoughnutChart(tepat, lambat, tidakHadir) {
       const el = document.getElementById('chartKehadiran');
       if (!el) return;
@@ -717,7 +739,6 @@
       });
     }
 
-    // FUNGSI GRAFIK 2: Line Chart Sisi Kepsek (Analisis Tren Berkala)
     function renderKepsekLineChart(labelTanggal, datasetTepat, datasetLambat) {
       const el = document.getElementById('kepsekChart');
       if (!el) return;
