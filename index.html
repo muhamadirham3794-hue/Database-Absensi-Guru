@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://unpkg.com/html5-qrcode"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://raw.githack.com/eKoopmans/html2pdf.js/master/dist/html2pdf.bundle.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 <body class="bg-slate-100 font-sans text-slate-800 antialiased">
 
@@ -166,7 +166,7 @@
                     <th class="p-3 font-semibold">NIP</th>
                     <th class="p-3 font-semibold">Nama</th>
                     <th class="p-3 font-semibold">Jabatan</th>
-                    <th class="p-3 font-semibold text-center">Kartu QR</th>
+                    <th class="p-3 text-center font-semibold">Kartu QR</th>
                   </tr>
                 </thead>
                 <tbody id="table-guru-body"></tbody>
@@ -276,7 +276,7 @@
 
 
   <script>
-    // ⚠️ MASUKKAN URL WEB APP GOOGLE APSS SCRIPT KAMU DI SINI (YANG BERAKHIRAN /exec)
+    // URL WEB APP GOOGLE APPS SCRIPT BERHASIL TERHUBUNG
     const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwwypvbsyT03oL9gjxFz7d94kWfa9LJQYIfFFlr-V9glAYw-Y7MawWkEG7VUd5kkz3ekw/exec";
 
     let chartInstance = null;
@@ -498,33 +498,26 @@
       if(res.success) refreshData();
     }
 
+    // PERBAIKAN FUNGSIONAL UNDUH PDF LAPORAN
     function downloadPDF() {
-  // Ambil elemen tabel laporan yang mau dijadikan PDF
-  const element = document.getElementById('printable-area');
-  
-  // Jika data log masih kosong, beri peringatan agar tidak mengunduh kertas kosong
-  if (!element || element.innerHTML.includes("Belum ada data")) {
-    alert("Belum ada data log absensi yang bisa diunduh saat ini, bro!");
-    return;
-  }
+      const element = document.getElementById('printable-area');
+      
+      if (!element || element.innerHTML.includes("Belum ada data")) {
+        alert("Belum ada data log absensi yang bisa diunduh saat ini, bro!");
+        return;
+      }
 
-  // Konfigurasi pembuatan PDF yang aman untuk browser & Tailwind
-  const opsi = {
-    margin:       [15, 15, 15, 15], // atas, kanan, bawah, kiri (dalam mm)
-    filename:     'Laporan_Absensi_Guru_' + new Date().toISOString().slice(0,10) + '.pdf',
-    image:        { type: 'jpeg', quality: 0.98 },
-    html2canvas:  { 
-      scale: 2, 
-      useCORS: true, 
-      logging: false,
-      letterRendering: true
-    },
-    jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-  };
+      const opsi = {
+        margin:       10, 
+        filename:     'Laporan_Absensi_Guru_' + new Date().toISOString().slice(0,10) + '.pdf',
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2, useCORS: true },
+        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      };
 
-  // Jalankan proses konversi HTML ke PDF dan langsung unduh
-  window.html2pdf().box(element).set(opsi).save();
-}
+      // Menggunakan rantai pemanggilan standard html2pdf agar tidak crash
+      html2pdf().from(element).set(opsi).save();
+    }
 
     // MODAL HANDLER
     function openQRModal(nip, nama) {
@@ -536,7 +529,7 @@
     function closeQRModal() { document.getElementById("qr-modal").classList.add("hidden"); }
     function printCard() {
       const w = window.open();
-      w.document.write(`<html><body onload="window.print(); window.close();" style="text-align:center;font-family:sans-serif;padding:30px;"><div style="border:2px solid #ccc;padding:20px;border-radius:12px;display:inline-block;background:#fafafa;">${document.getElementById("modal-print-area").innerHTML}</div></body></html>`);
+      w.document.write(`<html><body onload="window.print(); window.close();" style="text-align:center;font-family:sans-serif;padding:30px;"><div style="border:2px solid #ccc;padding:20px;border-radius:12px;display:inline-block;background:#fafafa;">\${document.getElementById("modal-print-area").innerHTML}</div></body></html>`);
       w.document.close();
     }
     function simpanMentoring(e) {
