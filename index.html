@@ -83,20 +83,23 @@
             <div id="reader" class="w-full bg-slate-50 rounded-xl border-2 border-dashed border-slate-300" style="max-width: 400px;"></div>
           </div>
           <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-            <h3 class="text-sm font-bold text-slate-500 uppercase tracking-wider mb-4">Pencatatan Alternatif (Manual)</h3>
+            <h3 class="text-sm font-bold text-slate-500 uppercase tracking-wider mb-4">Pencatatan Alternatif (Input Log)</h3>
             <form onsubmit="handleAbsenManual(event)" class="space-y-4">
               <div>
-                <label class="block text-xs font-semibold text-slate-600 mb-1">Pilih Tipe Absen</label>
-                <select id="manual-tipe" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm">
-                  <option value="Masuk">Masuk</option>
-                  <option value="Pulang">Pulang</option>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">Pilih Tipe / Status Kehadiran</label>
+                <select id="manual-tipe" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-medium">
+                  <option value="Masuk">Masuk (Scan QR Manual)</option>
+                  <option value="Pulang">Pulang (Scan QR Manual)</option>
+                  <option value="Sakit">Sakit (Keterangan Manual)</option>
+                  <option value="Izin">Izin (Keterangan Manual)</option>
+                  <option value="Alpa">Alpa / Tanpa Keterangan</option>
                 </select>
               </div>
               <div>
                 <label class="block text-xs font-semibold text-slate-600 mb-1">Nomor Induk Pegawai (NIP)</label>
                 <input type="text" id="manual-nip" required placeholder="Masukkan NIP" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm">
               </div>
-              <button type="submit" class="w-full bg-blue-600 text-white font-medium py-2.5 rounded-xl text-sm hover:bg-blue-700 transition">Kirim Absensi Manual</button>
+              <button type="submit" class="w-full bg-blue-600 text-white font-medium py-2.5 rounded-xl text-sm hover:bg-blue-700 transition">Kirim Data Absensi</button>
             </form>
             <div id="scan-feedback" class="mt-4 p-3 rounded-xl text-sm font-medium text-center hidden"></div>
           </div>
@@ -118,7 +121,7 @@
           <div class="w-full max-w-sm mx-auto h-60"><canvas id="chartKehadiran"></canvas></div>
         </div>
         <div id="printable-area" class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-          <h3 class="text-sm font-bold text-slate-500 uppercase tracking-wider mb-4">Log Aktivitas Absensi Keseluruhan</h3>
+          <h3 class="text-sm font-bold text-slate-500 uppercase tracking-wider mb-4 no-print">Log Aktivitas Absensi Keseluruhan</h3>
           <div class="overflow-x-auto">
             <table class="w-full text-left text-sm border-collapse">
               <thead>
@@ -127,8 +130,8 @@
                   <th class="p-3 font-semibold">NIP</th>
                   <th class="p-3 font-semibold">Nama Guru</th>
                   <th class="p-3 font-semibold">Jam Masuk</th>
-                  <th class="p-3 font-semibold">Status Masuk</th>
                   <th class="p-3 font-semibold">Jam Pulang</th>
+                  <th class="p-3 font-semibold">Status / Ket.</th>
                 </tr>
               </thead>
               <tbody id="table-log-body"></tbody>
@@ -276,7 +279,6 @@
 
 
   <script>
-    // URL WEB APP GOOGLE APPS SCRIPT
     const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwwypvbsyT03oL9gjxFz7d94kWfa9LJQYIfFFlr-V9glAYw-Y7MawWkEG7VUd5kkz3ekw/exec";
 
     let chartInstance = null;
@@ -285,7 +287,6 @@
     let userRole = '';
     let userName = '';
 
-    // Fungsi Global untuk menjembatani GitHub dengan Google Sheets via Fetch API
     async function panggilAPI(fungsiName, argumenArray = []) {
       try {
         const respons = await fetch(WEB_APP_URL, {
@@ -301,7 +302,6 @@
       }
     }
 
-    // ROUTING & AUTH LOGIC
     async function handleLogin(e) {
       e.preventDefault();
       const user = document.getElementById("username").value;
@@ -343,7 +343,6 @@
       location.reload();
     }
 
-    // TAB SWITCHER ADMIN
     function switchAdminTab(tabId) {
       document.querySelectorAll('.admin-tab-content').forEach(c => c.classList.add('hidden'));
       document.getElementById(tabId).classList.remove('hidden');
@@ -358,7 +357,6 @@
       if(html5QrcodeScanner) { html5QrcodeScanner.clear(); }
     }
 
-    // TAB SWITCHER KEPSEK
     function switchKepsekTab(tabId) {
       document.querySelectorAll('.kepsek-tab-content').forEach(c => c.classList.add('hidden'));
       document.getElementById(tabId).classList.remove('hidden');
@@ -386,7 +384,6 @@
         document.getElementById("config-masuk").value = res.config.Jam_Masuk || "";
         document.getElementById("config-pulang").value = res.config.Jam_Pulang || "";
 
-        // Proses Grouping Data Log Agar Masuk & Pulang Terkunci dalam Satu Baris
         const tLog = document.getElementById("table-log-body");
         tLog.innerHTML = res.logs.length === 0 ? `<tr><td colspan="6" class="p-4 text-center text-slate-400">Belum ada data</td></tr>` : "";
         
@@ -403,23 +400,38 @@
               nip: l.nip,
               nama: l.nama,
               jamMasuk: "-",
-              statusMasuk: "-",
-              jamPulang: "-"
+              jamPulang: "-",
+              statusKet: "-"
             };
           }
           
-          if (l.tipe.toLowerCase() === "masuk") {
+          const tipeKecil = l.tipe.toLowerCase();
+          if (tipeKecil === "masuk") {
             grupLog[key].jamMasuk = jam;
-            grupLog[key].statusMasuk = l.status;
-          } else if (l.tipe.toLowerCase() === "pulang") {
+            grupLog[key].statusKet = l.status; // 'Tepat Waktu' atau 'Terlambat'
+          } else if (tipeKecil === "pulang") {
             grupLog[key].jamPulang = jam;
+            if(grupLog[key].statusKet === "-") grupLog[key].statusKet = "Hadir";
+          } else if (["sakit", "izin", "alpa"].includes(tipeKecil)) {
+            grupLog[key].statusKet = l.tipe; // Menyimpan label Sakit/Izin/Alpa
           }
         });
 
-        // Loop untuk Render Hasil Pengelompokan Data Ke Dalam Tabel
         Object.values(grupLog).forEach(g => {
-          let statusBadge = g.statusMasuk === "Terlambat" ? '<span class="bg-amber-100 text-amber-800 text-xs px-2.5 py-0.5 rounded-full font-medium">' + g.statusMasuk + '</span>' : 
-                            g.statusMasuk === "Tepat Waktu" ? '<span class="bg-emerald-100 text-emerald-800 text-xs px-2.5 py-0.5 rounded-full font-medium">' + g.statusMasuk + '</span>' : '<span class="text-slate-400">-</span>';
+          let badgeStatus = "";
+          if (g.statusKet === "Tepat Waktu" || g.statusKet === "Hadir") {
+            badgeStatus = `<span class="bg-emerald-100 text-emerald-800 text-xs px-2.5 py-0.5 rounded-full font-semibold">Tepat Waktu</span>`;
+          } else if (g.statusKet === "Terlambat") {
+            badgeStatus = `<span class="bg-amber-100 text-amber-800 text-xs px-2.5 py-0.5 rounded-full font-semibold">Terlambat</span>`;
+          } else if (g.statusKet.toLowerCase() === "sakit") {
+            badgeStatus = `<span class="bg-blue-100 text-blue-800 text-xs px-2.5 py-0.5 rounded-full font-semibold">Sakit</span>`;
+          } else if (g.statusKet.toLowerCase() === "izin") {
+            badgeStatus = `<span class="bg-purple-100 text-purple-800 text-xs px-2.5 py-0.5 rounded-full font-semibold">Izin</span>`;
+          } else if (g.statusKet.toLowerCase() === "alpa") {
+            badgeStatus = `<span class="bg-red-100 text-red-800 text-xs px-2.5 py-0.5 rounded-full font-semibold">Alpa</span>`;
+          } else {
+            badgeStatus = `<span class="text-slate-400">-</span>`;
+          }
           
           tLog.innerHTML += `
             <tr class="border-b border-slate-100">
@@ -427,13 +439,12 @@
               <td class="p-3 font-mono text-xs">${g.nip}</td>
               <td class="p-3 font-medium">${g.nama}</td>
               <td class="p-3 font-semibold text-emerald-600">${g.jamMasuk}</td>
-              <td class="p-3">${statusBadge}</td>
               <td class="p-3 font-semibold text-blue-600">${g.jamPulang}</td>
+              <td class="p-3">${badgeStatus}</td>
             </tr>
           `;
         });
 
-        // Render Tabel Master Guru Admin
         const tGuru = document.getElementById("table-guru-body");
         tGuru.innerHTML = "";
         res.gurus.forEach(g => {
@@ -448,24 +459,21 @@
         document.getElementById("k-stat-lambat").innerText = res.stats.terlambat;
         document.getElementById("k-stat-pulang").innerText = res.stats.pulang;
 
-        // Dropdown Mentoring
         const dropdown = document.getElementById("mentoring-guru");
         dropdown.innerHTML = `<option value="">-- Pilih Guru --</option>`;
         res.gurus.forEach(g => { dropdown.innerHTML += `<option value="${g.nip}">${g.nama}</option>`; });
 
-        // Live Feed Pantau
         const fLog = document.getElementById("kepsek-table-log");
         fLog.innerHTML = res.logs.length === 0 ? `<tr><td class="p-4 text-center text-slate-400">Belum ada aktivitas</td></tr>` : "";
         res.logs.forEach(l => {
           let statusText = l.status === "Terlambat" ? `<span class="text-amber-600 font-semibold">[Terlambat]</span>` : l.status === "Tepat Waktu" ? `<span class="text-emerald-600 font-semibold">[Tepat Waktu]</span>` : "";
-          fLog.innerHTML += `<tr class="hover:bg-slate-50"><td class="p-3 text-xs text-slate-400 font-mono">${l.timestamp.split(' ')[1] || ""}</td><td class="p-3 text-slate-900"><strong>${l.nama}</strong> melakukan absen <strong>${l.tipe}</strong> ${statusText}</td></tr>`;
+          fLog.innerHTML += `<tr class="hover:bg-slate-50"><td class="p-3 text-xs text-slate-400 font-mono">${l.timestamp.split(' ')[1] || ""}</td><td class="p-3 text-slate-900"><strong>${l.nama}</strong> tercatat <strong>${l.tipe}</strong> ${statusText}</td></tr>`;
         });
 
         renderChart('kepsekChart', kChartInstance, res.stats.hadir - res.stats.terlambat, res.stats.terlambat, res.stats.totalGuru - res.stats.hadir);
       }
     }
 
-    // GLOBAL CHART ENGINE
     function renderChart(canvasId, instance, tepat, lambat, tidakHadir) {
       const ctx = document.getElementById(canvasId).getContext('2d');
       if (canvasId === 'chartKehadiran' && chartInstance) { chartInstance.destroy(); }
@@ -484,7 +492,6 @@
       if (canvasId === 'kepsekChart') kChartInstance = newChart;
     }
 
-    // HANDLER SCAN & INPUT ABSENSI
     function startScanner() {
       const tipe = document.getElementById("absen-tipe").value;
       html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 250 });
@@ -515,7 +522,6 @@
       fb.innerText = res.message;
     }
 
-    // MANAGEMENT INTEGRATION
     async function handleTambahGuru(e) {
       e.preventDefault();
       const res = await panggilAPI("tambahGuru", [document.getElementById("guru-nip").value, document.getElementById("guru-nama").value, document.getElementById("guru-jabatan").value]);
@@ -535,7 +541,7 @@
       if(res.success) refreshData();
     }
 
-    // METODE SAKTI CETAK PDF NATIVE BROWSER (ANTI-CRASH)
+    // FUNGSI PRINT LAPORAN PDF PREMIUM (BERSIH & FORMAL)
     function downloadPDF() {
       const element = document.getElementById('printable-area');
       
@@ -544,29 +550,48 @@
         return;
       }
 
-      const windowCetak = window.open('', '_blank', 'height=600,width=800');
+      // Ambil isi tabel saja secara bersih tanpa memedulikan elemen non-print luar
+      const isiTabelBersih = element.querySelector('table').outerHTML;
+      const windowCetak = window.open('', '_blank', 'height=700,width=900');
       
       windowCetak.document.write('<html><head><title>Laporan Absensi Guru - ' + new Date().toISOString().slice(0,10) + '</title>');
       windowCetak.document.write('<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">');
-      windowCetak.document.write('<style>@page { size: A4 portrait; margin: 20mm; } body { font-family: sans-serif; background: white; color: #000; } table { width:100%; border-collapse: collapse; } th, td { border: 1px solid #dee2e6; padding: 12px; text-align: left; }</style></head>');
-      windowCetak.document.write('<body class="p-4">');
-      windowCetak.document.write('<div class="text-center mb-4">');
-      windowCetak.document.write('<h2 class="fw-bold">LAPORAN AKTIVITAS ABSENSI GURU</h2>');
-      windowCetak.document.write('<p class="text-secondary">Dicetak otomatis pada: ' + new Date().toLocaleString('id-ID') + '</p><hr>');
-      windowCetak.document.write('</div><div>');
-      windowCetak.document.write(element.innerHTML);
+      windowCetak.document.write('<style>');
+      windowCetak.document.write('@page { size: A4 portrait; margin: 25mm 20mm 20mm 20mm; }');
+      windowCetak.document.write('body { font-family: "Times New Roman", Times, serif; background: white; color: #000; line-height: 1.5; }');
+      windowCetak.document.write('.kop-surat { text-align: center; margin-bottom: 30px; border-bottom: 4px double #000; padding-bottom: 10px; }');
+      windowCetak.document.write('.kop-surat h2 { margin: 0; font-size: 20px; font-weight: bold; text-transform: uppercase; }');
+      windowCetak.document.write('.kop-surat p { margin: 3px 0 0 0; font-size: 13px; color: #444; font-style: italic; }');
+      windowCetak.document.write('table { width: 100%; margin-top: 15px; border-collapse: collapse; font-size: 13px; }');
+      windowCetak.document.write('th { background-color: #f2f2f2 !important; color: #000 !important; font-weight: bold; text-align: center; border: 1px solid #000 !important; padding: 10px !important; }');
+      windowCetak.document.write('td { border: 1px solid #000 !important; padding: 8px 10px !important; text-align: left; }');
+      windowCetak.document.write('.text-center-td { text-align: center !important; }');
+      windowCetak.document.write('span { background: none !important; color: #000 !important; padding: 0 !important; font-weight: bold; }');
+      windowCetak.document.write('</style></head>');
+      windowCetak.document.write('<body class="p-2">');
+      windowCetak.document.write('<div class="kop-surat">');
+      windowCetak.document.write('<h2>Laporan Kehadiran & Aktivitas Absensi Guru</h2>');
+      windowCetak.document.write('<p>Sistem E-Absensi Digital Sekolah — Tanggal Cetak: ' + new Date().toLocaleString('id-ID') + '</p>');
+      windowCetak.document.write('</div>');
+      windowCetak.document.write('<div class="table-responsive">');
+      windowCetak.document.write(isiTabelBersih);
       windowCetak.document.write('</div></body></html>');
       
       windowCetak.document.close();
-      windowCetak.focus();
       
+      // Mengubah perataan text khusus kolom status & jam biar simetris di PDF resmi
+      windowCetak.querySelectorAll('td span').forEach(el => {
+        let parentTd = el.closest('td');
+        if(parentTd) parentTd.style.textAlign = 'center';
+      });
+
+      windowCetak.focus();
       setTimeout(function() {
         windowCetak.print();
         windowCetak.close();
       }, 750);
     }
 
-    // MODAL HANDLER
     function openQRModal(nip, nama) {
       document.getElementById("modal-guru-nama").innerText = nama;
       document.getElementById("modal-guru-nip").innerText = "NIP: " + nip;
