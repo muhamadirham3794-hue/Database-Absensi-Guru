@@ -7,7 +7,6 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://unpkg.com/html5-qrcode"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 <body class="bg-slate-100 font-sans text-slate-800 antialiased">
 
@@ -276,7 +275,7 @@
 
 
   <script>
-    // URL WEB APP GOOGLE APPS SCRIPT BERHASIL TERHUBUNG
+    // URL WEB APP GOOGLE APPS SCRIPT
     const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwwypvbsyT03oL9gjxFz7d94kWfa9LJQYIfFFlr-V9glAYw-Y7MawWkEG7VUd5kkz3ekw/exec";
 
     let chartInstance = null;
@@ -498,50 +497,51 @@
       if(res.success) refreshData();
     }
 
-    // PERBAIKAN FUNGSIONAL UNDUH PDF LAPORAN
+    // METODE SAKTI CETAK PDF NATIVE BROWSER (ANTI CRASH)
     function downloadPDF() {
-  const element = document.getElementById('printable-area');
-  
-  if (!element || element.innerHTML.includes("Belum ada data") || element.innerText.trim() === "") {
-    alert("Belum ada data log absensi yang bisa diunduh saat ini, bro!");
-    return;
-  }
+      const element = document.getElementById('printable-area');
+      
+      if (!element || element.innerHTML.includes("Belum ada data") || element.innerText.trim() === "") {
+        alert("Belum ada data log absensi yang bisa diunduh saat ini, bro!");
+        return;
+      }
 
-  // Membuat jendela cetak bayangan (iframe/tab baru)
-  const windowCetak = window.open('', '_blank', 'height=600,width=800');
-  
-  windowCetak.document.write(`
-    <html>
-      <head>
-        <title>Laporan Absensi Guru - ${new Date().toISOString().slice(0,10)}</title>
-        <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-        <style>
-          @page { size: A4 portrait; margin: 20mm; }
-          body { font-family: sans-serif; background: white; color: #000; }
-        </style>
-      </head>
-      <body class="p-6">
-        <div class="text-center mb-6">
-          <h1 class="text-2xl font-bold text-slate-900">LAPORAN AKTIVITAS ABSENSI GURU</h1>
-          <p class="text-sm text-slate-500">Dicetak otomatis oleh sistem pada: ${new Date().toLocaleString('id-ID')}</p>
-          <hr class="my-4 border-slate-300">
-        </div>
-        <div>
-          ${element.innerHTML}
-        </div>
-      </body>
-    </html>
-  `);
-  
-  windowCetak.document.close();
-  
-  // Menunggu dokumen termuat sempurna, lalu panggil dialog "Save as PDF" bawaan browser
-  windowCetak.focus();
-  setTimeout(function() {
-    windowCetak.print();
-    windowCetak.close();
-  }, 750);
-}
+      // Membuat window cetak baru
+      const windowCetak = window.open('', '_blank', 'height=600,width=800');
+      
+      windowCetak.document.write(`
+        <html>
+          <head>
+            <title>Laporan Absensi Guru - ${new Date().toISOString().slice(0,10)}</title>
+            <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"><\/script>
+            <style>
+              @page { size: A4 portrait; margin: 20mm; }
+              body { font-family: sans-serif; background: white; color: #000; }
+            </style>
+          </head>
+          <body class="p-6">
+            <div class="text-center mb-6">
+              <h1 class="text-2xl font-bold text-slate-900">LAPORAN AKTIVITAS ABSENSI GURU</h1>
+              <p class="text-sm text-slate-500">Dicetak otomatis pada: ${new Date().toLocaleString('id-ID')}</p>
+              <hr class="my-4 border-slate-300">
+            </div>
+            <div>
+              ${element.innerHTML}
+            </div>
+          </body>
+        </html>
+      `);
+      
+      windowCetak.document.close();
+      windowCetak.focus();
+      
+      // Delay sedikit agar engine browser sempat merender tabel
+      setTimeout(function() {
+        windowCetak.print();
+        windowCetak.close();
+      }, 750);
+    }
+
     // MODAL HANDLER
     function openQRModal(nip, nama) {
       document.getElementById("modal-guru-nama").innerText = nama;
