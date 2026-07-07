@@ -109,7 +109,7 @@
       <div id="tab-laporan" class="admin-tab-content space-y-6 hidden">
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <h2 class="text-2xl font-bold text-slate-900"><i class="fa-solid fa-chart-line mr-2 text-blue-600"></i>Laporan Kehadiran & Grafik</h2>
-          <button onclick="downloadPDF()" class="bg-red-600 text-white font-medium px-4 py-2 rounded-xl text-sm hover:bg-red-700 transition flex items-center gap-2"><i class="fa-solid fa-file-pdf"></i> Unduh Laporan PDF</button>
+          <button onclick="downloadPDF('printable-area', 'Laporan_Absensi_Guru')" class="bg-red-600 text-white font-medium px-4 py-2 rounded-xl text-sm hover:bg-red-700 transition flex items-center gap-2"><i class="fa-solid fa-file-pdf"></i> Unduh Laporan PDF</button>
         </div>
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm"><p class="text-xs text-slate-500 font-semibold uppercase">Total Guru</p><p id="stat-total" class="text-2xl font-bold text-slate-900 mt-1">0</p></div>
@@ -243,19 +243,44 @@
       </div>
 
       <div id="kepsek-mentoring" class="kepsek-tab-content space-y-6 hidden">
-        <h2 class="text-2xl font-bold text-slate-900"><i class="fa-solid fa-chalkboard-user mr-2 text-emerald-600"></i>Panel Evaluasi & Mentoring Guru</h2>
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 max-w-xl">
-          <form onsubmit="simpanMentoring(event)" class="space-y-4">
-            <div>
-              <label class="block text-xs font-semibold text-slate-600 mb-1">Pilih Guru Sasaran</label>
-              <select id="mentoring-guru" required class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm"></select>
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <h2 class="text-2xl font-bold text-slate-900"><i class="fa-solid fa-chalkboard-user mr-2 text-emerald-600"></i>Panel Evaluasi & Mentoring Guru</h2>
+          <button onclick="downloadPDF('printable-mentoring-area', 'Laporan_Mentoring_Kepsek')" class="bg-red-600 text-white font-medium px-4 py-2 rounded-xl text-sm hover:bg-red-700 transition flex items-center gap-2"><i class="fa-solid fa-file-pdf"></i> Unduh Laporan Mentoring PDF</button>
+        </div>
+        
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 h-fit">
+            <h3 class="text-sm font-bold text-slate-500 uppercase tracking-wider mb-4">Input Catatan Pembinaan</h3>
+            <form onsubmit="handleSimpanMentoring(event)" class="space-y-4">
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">Pilih Guru Sasaran</label>
+                <select id="mentoring-guru" required class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-medium"></select>
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">Catatan Evaluasi / Arahan Mandat</label>
+                <textarea id="mentoring-catatan" required rows="5" placeholder="Tuliskan butir evaluasi ketaatan, kinerja, atau saran pembinaan di sini..." class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 outline-none"></textarea>
+              </div>
+              <button type="submit" id="btn-submit-mentoring" class="w-full bg-emerald-600 text-white font-medium py-2.5 rounded-xl text-sm hover:bg-emerald-700 transition flex items-center justify-center gap-2">
+                <span>Simpan Log Pembinaan</span>
+              </button>
+            </form>
+          </div>
+          
+          <div id="printable-mentoring-area" class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 lg:col-span-2">
+            <h3 class="text-sm font-bold text-slate-500 uppercase tracking-wider mb-4">Arsip Log Evaluasi Resmi Kepala Sekolah</h3>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-sm border-collapse">
+                <thead>
+                  <tr class="border-b border-slate-200 text-slate-400 bg-slate-50/50">
+                    <th class="p-3 font-semibold w-1/4">Tanggal & Waktu</th>
+                    <th class="p-3 font-semibold w-1/4">Guru Terkait</th>
+                    <th class="p-3 font-semibold w-2/4">Isi Arahan / Mentoring</th>
+                  </tr>
+                </thead>
+                <tbody id="table-mentoring-body" class="divide-y divide-slate-100"></tbody>
+              </table>
             </div>
-            <div>
-              <label class="block text-xs font-semibold text-slate-600 mb-1">Catatan Evaluasi</label>
-              <textarea id="mentoring-catatan" required rows="4" placeholder="Tuliskan arahan..." class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm"></textarea>
-            </div>
-            <button type="submit" class="bg-emerald-600 text-white font-medium px-5 py-2.5 rounded-xl text-sm hover:bg-emerald-700 transition">Simpan Log Pembinaan</button>
-          </form>
+          </div>
         </div>
       </div>
     </div>
@@ -280,7 +305,7 @@
 
   <script>
     // MASUKKAN URL GOOGLE APPS SCRIPT DEPLOYMENT TERBARUMU DI SINI
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzvJpNCMJjC7zyOXIyb4NmnZS5ccRiaQhXEBOUjMZ1kCBf5EJTS20gWioFkgA8q-DACjw/exec";
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzMZe0OI7gNllrD09vfwvK2EGpHyeTMfUH6oWW8PnCBVhqoExtT5xyIf0lQtFiBfmCKZw/exec";
 
     let chartInstance = null;
     let kChartInstance = null;
@@ -289,6 +314,7 @@
     let userName = '';
     let globalConfigMasuk = "07:00";
     let globalConfigPulang = "14:00";
+    let databaseGuruGlobal = []; 
 
     async function panggilAPI(fungsiName, argumenArray = []) {
       try {
@@ -343,15 +369,15 @@
 
     function logout() { location.reload(); }
 
-    // SINKRONISASI TOTAL ANTARA VARIABEL JAM & BADGE MAKSIMAL
     async function refreshData() {
       const res = await panggilAPI("getDashboardData");
       if(!res.stats) return;
 
+      databaseGuruGlobal = res.gurus || [];
+
       let configMasukRaw = res.config.Jam_Masuk || "07:00";
       let configPulangRaw = res.config.Jam_Pulang || "14:00";
 
-      // Ekstraksi pembersihan string format ISO objek tanggal Google Sheets
       if (configMasukRaw.includes("T")) { configMasukRaw = configMasukRaw.split("T")[1].substring(0, 5); }
       else { configMasukRaw = configMasukRaw.substring(0, 5); }
       
@@ -459,15 +485,15 @@
         document.getElementById("k-stat-pulang").innerText = hitungPulang;
 
         const dropdown = document.getElementById("mentoring-guru");
-        dropdown.innerHTML = `<option value="">-- Pilih Guru --</option>`;
-        res.gurus.forEach(g => { dropdown.innerHTML += `<option value="${g.nip}">${g.nama}</option>`; });
+        dropdown.innerHTML = `<option value="">-- Pilih Guru Sasaran --</option>`;
+        res.gurus.forEach(g => { dropdown.innerHTML += `<option value="${g.nip}">${g.nama} (${g.jabatan})</option>`; });
 
+        // Tampilkan Feed Absensi Hari Ini
         const fLog = document.getElementById("kepsek-table-log");
         fLog.innerHTML = res.logs.length === 0 ? `<tr><td class="p-4 text-center text-slate-400">Belum ada aktivitas</td></tr>` : "";
         res.logs.forEach(l => {
           const jamLog = l.timestamp.split(' ')[1] || "";
           let statusText = "";
-          
           if (l.tipe.toLowerCase() === "masuk") {
             statusText = jamLog.substring(0, 5) > configMasukRaw ? `<span class="text-amber-600 font-semibold">[Terlambat]</span>` : `<span class="text-emerald-600 font-semibold">[Tepat Waktu]</span>`;
           } else if (l.tipe.toLowerCase() === "pulang") {
@@ -475,19 +501,95 @@
           } else {
             statusText = `<span class="text-purple-600 font-semibold">[${l.tipe}]</span>`;
           }
-          
           fLog.innerHTML += `<tr class="hover:bg-slate-50"><td class="p-3 text-xs text-slate-400 font-mono">${jamLog}</td><td class="p-3 text-slate-900"><strong>${l.nama}</strong> tercatat <strong>${l.tipe}</strong> ${statusText}</td></tr>`;
         });
+
+        // Tampilkan Riwayat Catatan Mentoring / Evaluasi
+        const tMentoring = document.getElementById("table-mentoring-body");
+        tMentoring.innerHTML = (!res.mentoringLogs || res.mentoringLogs.length === 0) ? `<tr><td colspan="3" class="p-4 text-center text-slate-400">Belum ada riwayat catatan pembinaan.</td></tr>` : "";
+        if (res.mentoringLogs) {
+          res.mentoringLogs.asReversed().forEach(m => {
+            tMentoring.innerHTML += `
+              <tr class="hover:bg-slate-50 text-xs">
+                <td class="p-3 text-slate-500 whitespace-nowrap font-medium">${m.tanggal}</td>
+                <td class="p-3 text-slate-900 font-bold">${m.nama}<br><span class="text-[10px] text-slate-400 font-mono font-normal">NIP: ${m.nip}</span></td>
+                <td class="p-3 text-slate-700 italic bg-amber-50/40 rounded-lg">${m.catatan}</td>
+              </tr>
+            `;
+          });
+        }
 
         let belumAbsenKepsek = res.stats.totalGuru - totalHadirHariIni;
         renderChart('kepsekChart', kChartInstance, hitungHadirTepatWaktu, hitungTerlambat, belumAbsenKepsek < 0 ? 0 : belumAbsenKepsek);
       }
     }
 
+    // HANDLER OPTIMALISASI PENGIRIMAN MENTORING KEPSEK
+    async function handleSimpanMentoring(e) {
+      e.preventDefault();
+      const selectGuru = document.getElementById("mentoring-guru");
+      const nipGuru = selectGuru.value;
+      const namaGuru = selectGuru.options[selectGuru.selectedIndex].text.split(' (')[0];
+      const isiCatatan = document.getElementById("mentoring-catatan").value;
+      const btn = document.getElementById("btn-submit-mentoring");
+
+      if (!nipGuru) { alert("Pilih salah satu guru terlebih dahulu!"); return; }
+
+      btn.disabled = true;
+      btn.innerHTML = `<i class="fa-solid fa-circle-notch animate-spin"></i> Menyimpan...`;
+
+      const res = await panggilAPI("simpanMentoring", [nipGuru, namaGuru, isiCatatan]);
+      alert(res.message);
+
+      btn.disabled = false;
+      btn.innerHTML = `<span>Simpan Log Pembinaan</span>`;
+
+      if (res.success) {
+        document.getElementById("mentoring-catatan").value = "";
+        refreshData();
+      }
+    }
+
+    // CETAK LAPORAN MENJADI PDF DINAMIS (BISA DIGUNAKAN DI SEMUA TABEL)
+    function downloadPDF(elementId, namaFile) {
+      const element = document.getElementById(elementId);
+      if (!element || element.innerText.includes("Belum ada data") || element.innerText.includes("Belum ada riwayat")) {
+        alert("Tidak ada data valid yang dapat dicetak saat ini!");
+        return;
+      }
+
+      const judulFormal = namaFile.replaceAll('_', ' ').toUpperCase();
+      const isiTabelBersih = element.querySelector('table').outerHTML;
+      const windowCetak = window.open('', '_blank', 'height=750,width=1000');
+      
+      windowCetak.document.write('<html><head><title>' + judulFormal + '</title>');
+      windowCetak.document.write('<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">');
+      windowCetak.document.write(`
+        <style>
+          @page { size: A4 portrait; margin: 20mm; } 
+          body { font-family: 'Times New Roman', Times, serif; color: #1e293b; } 
+          .kop { text-align: center; border-bottom: 4px double #000; padding-bottom: 12px; margin-bottom: 25px; }
+          .kop h2 { font-size: 18pt; font-weight: bold; margin: 0; }
+          .kop p { font-size: 10pt; color: #64748b; margin: 4px 0 0 0; }
+          table { width: 100%; border-collapse: collapse; font-size: 10pt; }
+          th { background-color: #f1f5f9 !important; color: #0f172a !important; font-weight: bold; text-transform: uppercase; font-size: 9pt; }
+          td, th { padding: 10px !important; border: 1px solid #cbd5e1 !important; vertical-align: top; }
+        </style>
+      </head><body>`);
+      windowCetak.document.write('<div class="kop"><h2>' + judulFormal + '</h2><p>Dokumen Resmi Hasil Sistem E-Absensi Digital | Tanggal Cetak: ' + new Date().toLocaleString('id-ID') + '</p></div>');
+      windowCetak.document.write(isiTabelBersih);
+      windowCetak.document.write('</body></html>');
+      windowCetak.document.close();
+      
+      setTimeout(() => {
+        windowCetak.print();
+        windowCetak.close();
+      }, 600);
+    }
+
     function switchAdminTab(tabId) {
       document.querySelectorAll('.admin-tab-content').forEach(c => c.classList.add('hidden'));
       document.getElementById(tabId).classList.remove('hidden');
-      
       document.querySelectorAll('.admin-tab-btn').forEach(b => {
         if(b.getAttribute('data-target') === tabId) {
           b.className = "admin-tab-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition text-blue-400 bg-slate-800";
@@ -501,6 +603,13 @@
     function switchKepsekTab(tabId) {
       document.querySelectorAll('.kepsek-tab-content').forEach(c => c.classList.add('hidden'));
       document.getElementById(tabId).classList.remove('hidden');
+      document.querySelectorAll('.kepsek-tab-btn').forEach(b => {
+        if(b.getAttribute('data-target') === tabId) {
+          b.className = "kepsek-tab-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition text-emerald-400 bg-slate-800";
+        } else {
+          b.className = "kepsek-tab-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition text-slate-300 hover:bg-slate-800";
+        }
+      });
     }
 
     function renderChart(canvasId, instance, tepat, lambat, tidakHadir) {
@@ -531,7 +640,6 @@
           if (!konfirmasi) return;
         }
       }
-
       html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 250 });
       html5QrcodeScanner.render((decodedText) => {
         html5QrcodeScanner.clear();
@@ -588,30 +696,6 @@
       if(res.success) refreshData();
     }
 
-    function downloadPDF() {
-      const element = document.getElementById('printable-area');
-      if (!element || element.innerText.includes("Belum ada data")) {
-        alert("Belum ada data untuk dicetak!");
-        return;
-      }
-
-      const isiTabelBersih = element.querySelector('table').outerHTML;
-      const windowCetak = window.open('', '_blank', 'height=700,width=900');
-      
-      windowCetak.document.write('<html><head><title>Laporan Absensi Guru</title>');
-      windowCetak.document.write('<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">');
-      windowCetak.document.write('<style>@page { size: A4 portrait; margin: 20mm; } body { font-family: serif; } .kop { text-align: center; border-bottom: 4px double #000; padding-bottom: 10px; margin-bottom: 20px; }</style></head><body>');
-      windowCetak.document.write('<div class="kop"><h2>LAPORAN AKTIVITAS ABSENSI GURU</h2><p>Dicetak pada: ' + new Date().toLocaleString('id-ID') + '</p></div>');
-      windowCetak.document.write(isiTabelBersih);
-      windowCetak.document.write('</body></html>');
-      windowCetak.document.close();
-      
-      setTimeout(() => {
-        windowCetak.print();
-        windowCetak.close();
-      }, 500);
-    }
-
     function openQRModal(nip, nama) {
       document.getElementById("modal-guru-nama").innerText = nama;
       document.getElementById("modal-guru-nip").innerText = "NIP: " + nip;
@@ -623,12 +707,6 @@
       const w = window.open();
       w.document.write('<html><body onload="window.print(); window.close();" style="text-align:center;padding:30px;"><div style="border:2px solid #ccc;padding:20px;border-radius:12px;display:inline-block;">' + document.getElementById("modal-print-area").innerHTML + '</div></body></html>');
       w.document.close();
-    }
-    function simpanMentoring(e) {
-      e.preventDefault();
-      alert("Catatan mentoring guru direkam!");
-      document.getElementById("mentoring-guru").value = "";
-      document.getElementById("mentoring-catatan").value = "";
     }
   </script>
 </body>
