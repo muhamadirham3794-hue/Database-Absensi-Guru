@@ -499,8 +499,32 @@
     }
 
     function downloadPDF() {
-      html2pdf().set({ margin: 10, filename: 'Laporan_Absensi_Guru.pdf', html2canvas: { scale: 2 }, jsPDF: { format: 'a4', orientation: 'portrait' } }).from(document.getElementById('printable-area')).save();
-    }
+  // Ambil elemen tabel laporan yang mau dijadikan PDF
+  const element = document.getElementById('printable-area');
+  
+  // Jika data log masih kosong, beri peringatan agar tidak mengunduh kertas kosong
+  if (!element || element.innerHTML.includes("Belum ada data")) {
+    alert("Belum ada data log absensi yang bisa diunduh saat ini, bro!");
+    return;
+  }
+
+  // Konfigurasi pembuatan PDF yang aman untuk browser & Tailwind
+  const opsi = {
+    margin:       [15, 15, 15, 15], // atas, kanan, bawah, kiri (dalam mm)
+    filename:     'Laporan_Absensi_Guru_' + new Date().toISOString().slice(0,10) + '.pdf',
+    image:        { type: 'jpeg', quality: 0.98 },
+    html2canvas:  { 
+      scale: 2, 
+      useCORS: true, 
+      logging: false,
+      letterRendering: true
+    },
+    jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+  };
+
+  // Jalankan proses konversi HTML ke PDF dan langsung unduh
+  window.html2pdf().box(element).set(opsi).save();
+}
 
     // MODAL HANDLER
     function openQRModal(nip, nama) {
