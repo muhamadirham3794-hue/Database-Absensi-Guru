@@ -17,7 +17,7 @@
         <div class="inline-flex p-4 bg-blue-50 text-blue-600 rounded-full text-3xl mb-3">
           <i class="fa-solid fa-graduation-cap"></i>
         </div>
-        <h1 class="text-2xl font-bold text-slate-900">E-Absensi Guru</h1>
+        <h1 id="login-app-title" class="text-2xl font-bold text-slate-900">E-Absensi Guru</h1>
         <p class="text-sm text-slate-500 mt-1">Silakan masuk menggunakan akun Anda</p>
       </div>
       
@@ -52,7 +52,7 @@
       <div class="p-4 md:p-5 border-b border-slate-800 flex items-center justify-between md:justify-start gap-3">
         <div class="flex items-center gap-3">
           <i class="fa-solid fa-user-gear text-xl text-blue-400"></i>
-          <span class="font-bold tracking-wide">ADMIN PANEL</span>
+          <span id="admin-sidebar-title" class="font-bold tracking-wide truncate max-w-[180px]">ADMIN PANEL</span>
         </div>
       </div>
       <div class="p-4 bg-slate-800/50 text-xs border-b border-slate-800 text-slate-400">
@@ -63,7 +63,7 @@
         <button onclick="switchAdminTab('tab-scan')" class="admin-tab-btn whitespace-nowrap flex items-center gap-2 px-3 py-2 rounded-lg text-xs md:text-sm font-medium transition text-blue-400 bg-slate-800" data-target="tab-scan"><i class="fa-solid fa-qrcode w-4"></i> Scan</button>
         <button onclick="switchAdminTab('tab-laporan')" class="admin-tab-btn whitespace-nowrap flex items-center gap-2 px-3 py-2 rounded-lg text-xs md:text-sm font-medium transition text-slate-300 hover:bg-slate-800" data-target="tab-laporan"><i class="fa-solid fa-chart-line w-4"></i> Laporan</button>
         <button onclick="switchAdminTab('tab-guru')" class="admin-tab-btn whitespace-nowrap flex items-center gap-2 px-3 py-2 rounded-lg text-xs md:text-sm font-medium transition text-slate-300 hover:bg-slate-800" data-target="tab-guru"><i class="fa-solid fa-users w-4"></i> Data Guru</button>
-        <button onclick="switchAdminTab('tab-pengaturan')" class="admin-tab-btn whitespace-nowrap flex items-center gap-2 px-3 py-2 rounded-lg text-xs md:text-sm font-medium transition text-slate-300 hover:bg-slate-800" data-target="tab-pengaturan"><i class="fa-solid fa-sliders w-4"></i> Jam Kerja</button>
+        <button onclick="switchAdminTab('tab-pengaturan')" class="admin-tab-btn whitespace-nowrap flex items-center gap-2 px-3 py-2 rounded-lg text-xs md:text-sm font-medium transition text-slate-300 hover:bg-slate-800" data-target="tab-pengaturan"><i class="fa-solid fa-sliders w-4"></i> Pengaturan</button>
       </nav>
       <div class="p-3 md:p-4 border-t border-slate-800 hidden md:block">
         <button onclick="logout()" class="w-full bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white px-3 py-2 rounded-lg text-sm font-medium transition flex items-center justify-center gap-2"><i class="fa-solid fa-right-from-bracket"></i> Keluar</button>
@@ -192,19 +192,37 @@
       </div>
 
       <div id="tab-pengaturan" class="admin-tab-content space-y-4 md:space-y-6 hidden">
-        <h2 class="text-xl md:text-2xl font-bold text-slate-900"><i class="fa-solid fa-sliders mr-2 text-blue-600"></i>Konfigurasi Waktu</h2>
-        <div class="bg-white p-4 md:p-6 rounded-2xl shadow-sm border border-slate-200 max-w-md">
-          <form onsubmit="handleSimpanConfig(event)" class="space-y-4">
-            <div>
-              <label class="block text-xs font-semibold text-slate-600 mb-1">Batas Jam Masuk (HH:MM)</label>
-              <input type="text" id="config-masuk" required placeholder="07:00" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs md:text-sm">
-            </div>
-            <div>
-              <label class="block text-xs font-semibold text-slate-600 mb-1">Jam Pulang Kerja (HH:MM)</label>
-              <input type="text" id="config-pulang" required placeholder="14:00" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs md:text-sm">
-            </div>
-            <button type="submit" class="w-full bg-blue-600 text-white font-medium py-2.5 rounded-xl text-xs md:text-sm hover:bg-blue-700 transition">Perbarui Pengaturan</button>
-          </form>
+        <h2 class="text-xl md:text-2xl font-bold text-slate-900"><i class="fa-solid fa-sliders mr-2 text-blue-600"></i>Pengaturan Umum Instansi</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="bg-white p-4 md:p-6 rounded-2xl shadow-sm border border-slate-200">
+            <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4"><i class="fa-solid fa-clock mr-2 text-blue-600"></i>Konfigurasi Waktu Absensi</h3>
+            <form onsubmit="handleSimpanConfig(event)" class="space-y-4">
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">Batas Jam Masuk (HH:MM)</label>
+                <input type="text" id="config-masuk" required placeholder="07:00" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs md:text-sm">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">Jam Pulang Kerja (HH:MM)</label>
+                <input type="text" id="config-pulang" required placeholder="14:00" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs md:text-sm">
+              </div>
+              <button type="submit" class="w-full bg-blue-600 text-white font-medium py-2.5 rounded-xl text-xs md:text-sm hover:bg-blue-700 transition">Perbarui Jam Kerja</button>
+            </form>
+          </div>
+
+          <div class="bg-white p-4 md:p-6 rounded-2xl shadow-sm border border-slate-200">
+            <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4"><i class="fa-solid fa-school mr-2 text-blue-600"></i>Identitas Sekolah (Kop Laporan)</h3>
+            <form onsubmit="handleSimpanConfig(event)" class="space-y-4">
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">Nama Resmi Sekolah</label>
+                <input type="text" id="config-nama-sekolah" required placeholder="Contoh: SMA Negeri 1 Jakarta" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs md:text-sm">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">Alamat Lengkap & Telepon</label>
+                <input type="text" id="config-alamat-sekolah" required placeholder="Jl. Raya No.12, Telp (021) 12345" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs md:text-sm">
+              </div>
+              <button type="submit" class="w-full bg-slate-800 text-white font-medium py-2.5 rounded-xl text-xs md:text-sm hover:bg-slate-900 transition">Simpan Semua Pengaturan</button>
+            </form>
+          </div>
         </div>
       </div>
     </div>
@@ -216,7 +234,7 @@
       <div class="p-4 md:p-5 border-b border-slate-800 flex items-center justify-between md:justify-start gap-3">
         <div class="flex items-center gap-3">
           <i class="fa-solid fa-graduation-cap text-xl text-emerald-400"></i>
-          <span class="font-bold tracking-wide">MANDAT KEPSEK</span>
+          <span id="kepsek-sidebar-title" class="font-bold tracking-wide truncate max-w-[180px]">MANDAT KEPSEK</span>
         </div>
       </div>
       <div class="p-4 bg-slate-800/50 text-xs border-b border-slate-800 text-slate-400">
@@ -349,15 +367,19 @@
 
 
   <script>
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzf17-_IxeyJ4rihpVt6lwu_dNNcxHcC_yaieGkw2eduN3y_v6KJ4h7jGLJGWZWu6cokw/exec";
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyXt9qOU8lNWkHhfum3BmeLTxpNm2ygAh_FTpcC_Cs3RqKKfNjjgY8Ms5TrWZXQ7D19bg/exec";
 
     let chartInstance = null;
     let kChartInstance = null;
     let html5QrcodeScanner = null;
     let userRole = '';
     let userName = '';
+    
+    // Variabel Global Config Sekolah Dinamis
     let globalConfigMasuk = "07:00";
     let globalConfigPulang = "14:00";
+    let globalNamaSekolah = "E-Absensi Sekolah";
+    let globalAlamatSekolah = "Jl. Pendidikan No. 1";
     let databaseGuruGlobal = []; 
 
     async function panggilAPI(fungsiName, argumenArray = []) {
@@ -413,7 +435,6 @@
 
     function logout() { location.reload(); }
 
-    // FUNGSI ANIMASI REFRESH DATA MANUAL SINKRONISASI
     async function handleManualRefresh(buttonEl) {
       const icon = buttonEl.querySelector('i');
       const text = buttonEl.querySelector('span');
@@ -437,8 +458,11 @@
 
       databaseGuruGlobal = res.gurus || [];
 
+      // Ambil Konfigurasi Identitas & Jam Kerja
       let configMasukRaw = res.config.Jam_Masuk || "07:00";
       let configPulangRaw = res.config.Jam_Pulang || "14:00";
+      globalNamaSekolah = res.config.Nama_Sekolah || "E-Absensi Sekolah";
+      globalAlamatSekolah = res.config.Alamat_Sekolah || "Jl. Pendidikan No.1";
 
       if (configMasukRaw.includes("T")) { configMasukRaw = configMasukRaw.split("T")[1].substring(0, 5); }
       else { configMasukRaw = configMasukRaw.substring(0, 5); }
@@ -448,6 +472,11 @@
 
       globalConfigMasuk = configMasukRaw;
       globalConfigPulang = configPulangRaw;
+
+      // Update Teks Branding Instansi Secara Real-Time di UI
+      document.getElementById("login-app-title").innerText = globalNamaSekolah;
+      document.getElementById("admin-sidebar-title").innerText = globalNamaSekolah.toUpperCase();
+      document.getElementById("kepsek-sidebar-title").innerText = globalNamaSekolah.toUpperCase();
 
       let hitungHadirTepatWaktu = 0;
       let hitungTerlambat = 0;
@@ -514,7 +543,6 @@
 
       let totalHadirHariIni = hitungHadirTepatWaktu + hitungTerlambat;
 
-      // PROSES PINDAI STRATEGIS REWARD & PUNISHMENT KEPSEK
       let namaTopDisiplin = "Belum Ada Data";
       let skorTopDisiplin = 0;
       Object.entries(guruSkorDisiplin).forEach(([nip, item]) => {
@@ -539,8 +567,11 @@
         document.getElementById("stat-lambat").innerText = hitungTerlambat;
         document.getElementById("stat-pulang").innerText = hitungPulang;
         
+        // Pasang value pada Form Pengaturan Umum
         document.getElementById("config-masuk").value = configMasukRaw;
         document.getElementById("config-pulang").value = configPulangRaw;
+        document.getElementById("config-nama-sekolah").value = globalNamaSekolah;
+        document.getElementById("config-alamat-sekolah").value = globalAlamatSekolah;
 
         const tLog = document.getElementById("table-log-body");
         tLog.innerHTML = res.logs.length === 0 ? `<tr><td colspan="6" class="p-4 text-center text-slate-400">Belum ada data</td></tr>` : "";
@@ -663,6 +694,7 @@
       }
     }
 
+    // MODIFIKASI FITUR DOWNALOD PDF: SEKARANG MENGGUNAKAN KOP SURAT DINAMIS SEKOLAH
     function downloadPDF(elementId, namaFile) {
       const element = document.getElementById(elementId);
       if (!element || element.innerText.includes("Belum ada data") || element.innerText.includes("Belum ada riwayat")) {
@@ -670,25 +702,35 @@
         return;
       }
 
-      const judulFormal = namaFile.replaceAll('_', ' ').toUpperCase();
+      const kategoriLaporan = namaFile.replaceAll('_', ' ').toUpperCase();
       const isiTabelBersih = element.querySelector('table').outerHTML;
       const windowCetak = window.open('', '_blank', 'height=750,width=1000');
       
-      windowCetak.document.write('<html><head><title>' + judulFormal + '</title>');
+      windowCetak.document.write('<html><head><title>' + globalNamaSekolah + ' - ' + kategoriLaporan + '</title>');
       windowCetak.document.write('<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">');
       windowCetak.document.write(`
         <style>
           @page { size: A4 portrait; margin: 20mm; } 
           body { font-family: 'Times New Roman', Times, serif; color: #1e293b; } 
-          .kop { text-align: center; border-bottom: 4px double #000; padding-bottom: 12px; margin-bottom: 25px; }
-          .kop h2 { font-size: 18pt; font-weight: bold; margin: 0; }
-          .kop p { font-size: 10pt; color: #64748b; margin: 4px 0 0 0; }
+          .kop { text-align: center; border-bottom: 4px double #000; padding-bottom: 8px; margin-bottom: 20px; }
+          .kop h2 { font-size: 16pt; font-weight: bold; margin: 0; text-transform: uppercase; }
+          .kop h3 { font-size: 13pt; font-weight: normal; margin: 4px 0 0 0; color: #334155; }
+          .kop p { font-size: 9pt; italic; color: #64748b; margin: 4px 0 0 0; }
+          .sub-judul { font-size: 12pt; font-weight: bold; text-align: center; margin-bottom: 15px; text-decoration: underline; }
           table { width: 100%; border-collapse: collapse; font-size: 10pt; }
-          th { background-color: #f1f5f9 !important; color: #0f172a !important; font-weight: bold; text-transform: uppercase; font-size: 9pt; }
-          td, th { padding: 10px !important; border: 1px solid #cbd5e1 !important; vertical-align: top; }
+          th { background-color: #f8fafc !important; color: #0f172a !important; font-weight: bold; text-transform: uppercase; font-size: 9pt; text-align: left; }
+          td, th { padding: 8px 10px !important; border: 1px solid #cbd5e1 !important; vertical-align: top; }
         </style>
       </head><body>`);
-      windowCetak.document.write('<div class="kop"><h2>' + judulFormal + '</h2><p>Dokumen Resmi Hasil Sistem E-Absensi Digital | Tanggal Cetak: ' + new Date().toLocaleString('id-ID') + '</p></div>');
+      
+      // MEMBUAT KOP DIGITAL SURAT BERDASARKAN INPUT IDENTITAS SEKOLAH
+      windowCetak.document.write('<div class="kop">');
+      windowCetak.document.write('<h2>' + globalNamaSekolah + '</h2>');
+      windowCetak.document.write('<p>' + globalAlamatSekolah + '</p>');
+      windowCetak.document.write('</div>');
+      
+      windowCetak.document.write('<div class="sub-judul">' + kategoriLaporan + '</div>');
+      windowCetak.document.write('<p style="font-size:9pt; text-align:right; color:#475569; margin-bottom:10px;">Tanggal Unduh Dokumen: ' + new Date().toLocaleString('id-ID') + '</p>');
       windowCetak.document.write(isiTabelBersih);
       windowCetak.document.write('</body></html>');
       windowCetak.document.close();
@@ -847,9 +889,15 @@
       }
     }
 
+    // MODIFIKASI AKSI UPDATE PENGATURAN UMUM SEKOLAH
     async function handleSimpanConfig(e) {
       e.preventDefault();
-      const res = await panggilAPI("simpanPengaturan", [document.getElementById("config-masuk").value, document.getElementById("config-pulang").value]);
+      const masuk = document.getElementById("config-masuk").value;
+      const pulang = document.getElementById("config-pulang").value;
+      const namaSekolah = document.getElementById("config-nama-sekolah").value;
+      const alamatSekolah = document.getElementById("config-alamat-sekolah").value;
+
+      const res = await panggilAPI("simpanPengaturan", [masuk, pulang, namaSekolah, alamatSekolah]);
       alert(res.message); 
       if(res.success) await refreshData();
     }
@@ -866,6 +914,14 @@
       w.document.write('<html><body onload="window.print(); window.close();" style="text-align:center;padding:30px;"><div style="border:2px solid #ccc;padding:20px;border-radius:12px;display:inline-block;">' + document.getElementById("modal-print-area").innerHTML + '</div></body></html>');
       w.document.close();
     }
+    
+    // Auto load data konfigurasi saat aplikasi pertama kali dibuka (Membantu rendering awal nama sekolah di halaman login)
+    window.addEventListener("DOMContentLoaded", async () => {
+       const res = await panggilAPI("getDashboardData");
+       if(res && res.config && res.config.Nama_Sekolah) {
+          document.getElementById("login-app-title").innerText = res.config.Nama_Sekolah;
+       }
+    });
   </script>
 </body>
 </html>
