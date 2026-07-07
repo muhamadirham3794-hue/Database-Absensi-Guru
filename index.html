@@ -370,7 +370,7 @@
       });
     }
 
-    // ENGINE AMBIL & RENDER DATA DATABASE (FORMAT MASUK/PULANG SATU BARIS)
+    // ENGINE AMBIL & RENDER DATA DATABASE (FIX LOGIKA TERLAMBAT & KETERANGAN MANUAL)
     async function refreshData() {
       const res = await panggilAPI("getDashboardData");
       if(!res.stats) return;
@@ -408,26 +408,38 @@
           const tipeKecil = l.tipe.toLowerCase();
           if (tipeKecil === "masuk") {
             grupLog[key].jamMasuk = jam;
-            grupLog[key].statusKet = l.status; // 'Tepat Waktu' atau 'Terlambat'
+            
+            // Perbaikan Poin 1: Validasi Terlambat Frontend vs Config Jam Kerja
+            const batasMasuk = document.getElementById("config-masuk").value || "07:00";
+            if (jam.slice(0,5) > batasMasuk) {
+              grupLog[key].statusKet = "Terlambat";
+            } else {
+              grupLog[key].statusKet = "Tepat Waktu";
+            }
           } else if (tipeKecil === "pulang") {
             grupLog[key].jamPulang = jam;
-            if(grupLog[key].statusKet === "-") grupLog[key].statusKet = "Hadir";
+            if(grupLog[key].statusKet === "-" || grupLog[key].statusKet === "") {
+              grupLog[key].statusKet = "Tepat Waktu";
+            }
           } else if (["sakit", "izin", "alpa"].includes(tipeKecil)) {
-            grupLog[key].statusKet = l.tipe; // Menyimpan label Sakit/Izin/Alpa
+            // Perbaikan Poin 2: Mengunci Keterangan Khusus Manual agar tidak ditimpa "Tepat Waktu"
+            grupLog[key].statusKet = l.tipe; 
           }
         });
 
         Object.values(grupLog).forEach(g => {
           let badgeStatus = "";
-          if (g.statusKet === "Tepat Waktu" || g.statusKet === "Hadir") {
+          const statusKecil = g.statusKet.toLowerCase();
+          
+          if (statusKecil === "tepat waktu" || statusKecil === "hadir") {
             badgeStatus = `<span class="bg-emerald-100 text-emerald-800 text-xs px-2.5 py-0.5 rounded-full font-semibold">Tepat Waktu</span>`;
-          } else if (g.statusKet === "Terlambat") {
+          } else if (statusKecil === "terlambat") {
             badgeStatus = `<span class="bg-amber-100 text-amber-800 text-xs px-2.5 py-0.5 rounded-full font-semibold">Terlambat</span>`;
-          } else if (g.statusKet.toLowerCase() === "sakit") {
+          } else if (statusKecil === "sakit") {
             badgeStatus = `<span class="bg-blue-100 text-blue-800 text-xs px-2.5 py-0.5 rounded-full font-semibold">Sakit</span>`;
-          } else if (g.statusKet.toLowerCase() === "izin") {
+          } else if (statusKecil === "izin") {
             badgeStatus = `<span class="bg-purple-100 text-purple-800 text-xs px-2.5 py-0.5 rounded-full font-semibold">Izin</span>`;
-          } else if (g.statusKet.toLowerCase() === "alpa") {
+          } else if (statusKecil === "alpa") {
             badgeStatus = `<span class="bg-red-100 text-red-800 text-xs px-2.5 py-0.5 rounded-full font-semibold">Alpa</span>`;
           } else {
             badgeStatus = `<span class="text-slate-400">-</span>`;
@@ -494,6 +506,18 @@
 
     function startScanner() {
       const tipe = document.getElementById("absen-tipe").value;
+      
+      // Perbaikan Poin 3: Intersepsi Validasi Waktu Pulang pada Scan QR Kamera
+      if (tipe.toLowerCase() === "pulang") {
+        const sekarang = new Date();
+        const jamSekarang = String(sekarang.getHours()).padStart(2, '0') + ":" + String(sekarang.getMinutes()).padStart(2, '0');
+        const batasPulang = document.getElementById("config-pulang").value || "14:00";
+        if (jamSekarang < batasPulang) {
+          const konfirmasi = confirm("⚠️ Peringatan: Saat ini baru jam " + jamSekarang + ".\nBelum memasuki waktu pulang resmi (" + batasPulang + ").\nApakah Anda yakin ingin tetap melakukan absensi pulang duluan?");
+          if (!konfirmasi) return;
+        }
+      }
+
       html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 250 });
       html5QrcodeScanner.render((decodedText) => {
         html5QrcodeScanner.clear();
@@ -503,7 +527,20 @@
 
     function handleAbsenManual(e) {
       e.preventDefault();
-      prosesAbsensiData(document.getElementById("manual-nip").value, document.getElementById("manual-tipe").value);
+      const tipe = document.getElementById("manual-tipe").value;
+      
+      // Perbaikan Poin 3: Intersepsi Validasi Waktu Pulang pada Input Manual Admin
+      if (tipe.toLowerCase() === "pulang") {
+        const sekarang = new Date();
+        const jamSekarang = String(sekarang.getHours()).padStart(2, '0') + ":" + String(sekarang.getMinutes()).padStart(2, '0');
+        const batasPulang = document.getElementById("config-pulang").value || "14:00";
+        if (jamSekarang < batasPulang) {
+          const konfirmasi = confirm("⚠️ Peringatan: Saat ini baru jam " + jamSekarang + ".\nBelum memasuki waktu pulang resmi (" + batasPulang + ").\nApakah Anda yakin ingin tetap memproses log absen pulang ini?");
+          if (!konfirmasi) return;
+        }
+      }
+      
+      prosesAbsensiData(document.getElementById("manual-nip").value, tipe);
     }
 
     async function prosesAbsensiData(nip, tipe) {
@@ -541,7 +578,6 @@
       if(res.success) refreshData();
     }
 
-    // FUNGSI PRINT LAPORAN PDF PREMIUM (BERSIH & FORMAL)
     function downloadPDF() {
       const element = document.getElementById('printable-area');
       
@@ -550,7 +586,6 @@
         return;
       }
 
-      // Ambil isi tabel saja secara bersih tanpa memedulikan elemen non-print luar
       const isiTabelBersih = element.querySelector('table').outerHTML;
       const windowCetak = window.open('', '_blank', 'height=700,width=900');
       
@@ -579,7 +614,6 @@
       
       windowCetak.document.close();
       
-      // Mengubah perataan text khusus kolom status & jam biar simetris di PDF resmi
       windowCetak.querySelectorAll('td span').forEach(el => {
         let parentTd = el.closest('td');
         if(parentTd) parentTd.style.textAlign = 'center';
