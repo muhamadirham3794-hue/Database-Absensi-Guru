@@ -123,11 +123,12 @@
             <table class="w-full text-left text-sm border-collapse">
               <thead>
                 <tr class="border-b border-slate-200 text-slate-400 bg-slate-50/50">
-                  <th class="p-3 font-semibold">Waktu / Tanggal</th>
+                  <th class="p-3 font-semibold">Tanggal</th>
                   <th class="p-3 font-semibold">NIP</th>
                   <th class="p-3 font-semibold">Nama Guru</th>
-                  <th class="p-3 font-semibold">Tipe</th>
-                  <th class="p-3 font-semibold">Status</th>
+                  <th class="p-3 font-semibold">Jam Masuk</th>
+                  <th class="p-3 font-semibold">Status Masuk</th>
+                  <th class="p-3 font-semibold">Jam Pulang</th>
                 </tr>
               </thead>
               <tbody id="table-log-body"></tbody>
@@ -371,7 +372,7 @@
       });
     }
 
-    // ENGINE AMBIL & RENDER DATA DATABASE
+    // ENGINE AMBIL & RENDER DATA DATABASE (FORMAT MASUK/PULANG SATU BARIS)
     async function refreshData() {
       const res = await panggilAPI("getDashboardData");
       if(!res.stats) return;
@@ -385,14 +386,51 @@
         document.getElementById("config-masuk").value = res.config.Jam_Masuk || "";
         document.getElementById("config-pulang").value = res.config.Jam_Pulang || "";
 
-        // Render Tabel Laporan Admin
+        // Proses Grouping Data Log Agar Masuk & Pulang Terkunci dalam Satu Baris
         const tLog = document.getElementById("table-log-body");
-        tLog.innerHTML = res.logs.length === 0 ? `<tr><td colspan="5" class="p-4 text-center text-slate-400">Belum ada data</td></tr>` : "";
+        tLog.innerHTML = res.logs.length === 0 ? `<tr><td colspan="6" class="p-4 text-center text-slate-400">Belum ada data</td></tr>` : "";
+        
+        const grupLog = {};
         res.logs.forEach(l => {
-          let statusBadge = l.status === "Terlambat" ? `<span class="bg-amber-100 text-amber-800 text-xs px-2.5 py-0.5 rounded-full font-medium">${l.status}</span>` : 
-                            l.status === "Tepat Waktu" ? `<span class="bg-emerald-100 text-emerald-800 text-xs px-2.5 py-0.5 rounded-full font-medium">${l.status}</span>` : `<span class="text-slate-400">-</span>`;
-          let tipeBadge = l.tipe === "Masuk" ? `<span class="text-emerald-600 font-bold">Masuk</span>` : `<span class="text-blue-600 font-bold">Pulang</span>`;
-          tLog.innerHTML += `<tr class="border-b border-slate-100"><td class="p-3">${l.timestamp}</td><td class="p-3 font-mono text-xs">${l.nip}</td><td class="p-3 font-medium">${l.nama}</td><td class="p-3">${tipeBadge}</td><td class="p-3">${statusBadge}</td></tr>`;
+          const bagianWaktu = l.timestamp.split(' ');
+          const tanggal = bagianWaktu[0] || l.timestamp;
+          const jam = bagianWaktu[1] || "";
+          
+          const key = tanggal + "_" + l.nip;
+          if (!grupLog[key]) {
+            grupLog[key] = {
+              tanggal: tanggal,
+              nip: l.nip,
+              nama: l.nama,
+              jamMasuk: "-",
+              statusMasuk: "-",
+              jamPulang: "-"
+            };
+          }
+          
+          if (l.tipe.toLowerCase() === "masuk") {
+            grupLog[key].jamMasuk = jam;
+            grupLog[key].statusMasuk = l.status;
+          } else if (l.tipe.toLowerCase() === "pulang") {
+            grupLog[key].jamPulang = jam;
+          }
+        });
+
+        // Loop untuk Render Hasil Pengelompokan Data Ke Dalam Tabel
+        Object.values(grupLog).forEach(g => {
+          let statusBadge = g.statusMasuk === "Terlambat" ? '<span class="bg-amber-100 text-amber-800 text-xs px-2.5 py-0.5 rounded-full font-medium">' + g.statusMasuk + '</span>' : 
+                            g.statusMasuk === "Tepat Waktu" ? '<span class="bg-emerald-100 text-emerald-800 text-xs px-2.5 py-0.5 rounded-full font-medium">' + g.statusMasuk + '</span>' : '<span class="text-slate-400">-</span>';
+          
+          tLog.innerHTML += `
+            <tr class="border-b border-slate-100">
+              <td class="p-3">${g.tanggal}</td>
+              <td class="p-3 font-mono text-xs">${g.nip}</td>
+              <td class="p-3 font-medium">${g.nama}</td>
+              <td class="p-3 font-semibold text-emerald-600">${g.jamMasuk}</td>
+              <td class="p-3">${statusBadge}</td>
+              <td class="p-3 font-semibold text-blue-600">${g.jamPulang}</td>
+            </tr>
+          `;
         });
 
         // Render Tabel Master Guru Admin
@@ -420,7 +458,7 @@
         fLog.innerHTML = res.logs.length === 0 ? `<tr><td class="p-4 text-center text-slate-400">Belum ada aktivitas</td></tr>` : "";
         res.logs.forEach(l => {
           let statusText = l.status === "Terlambat" ? `<span class="text-amber-600 font-semibold">[Terlambat]</span>` : l.status === "Tepat Waktu" ? `<span class="text-emerald-600 font-semibold">[Tepat Waktu]</span>` : "";
-          fLog.innerHTML += `<tr class="hover:bg-slate-50"><td class="p-3 text-xs text-slate-400 font-mono">${l.timestamp.split(' ')[1]}</td><td class="p-3 text-slate-900"><strong>${l.nama}</strong> melakukan absen <strong>${l.tipe}</strong> ${statusText}</td></tr>`;
+          fLog.innerHTML += `<tr class="hover:bg-slate-50"><td class="p-3 text-xs text-slate-400 font-mono">${l.timestamp.split(' ')[1] || ""}</td><td class="p-3 text-slate-900"><strong>${l.nama}</strong> melakukan absen <strong>${l.tipe}</strong> ${statusText}</td></tr>`;
         });
 
         renderChart('kepsekChart', kChartInstance, res.stats.hadir - res.stats.terlambat, res.stats.terlambat, res.stats.totalGuru - res.stats.hadir);
@@ -497,7 +535,7 @@
       if(res.success) refreshData();
     }
 
-    // METODE SAKTI CETAK PDF NATIVE BROWSER (DIAMANKAN DARI TAG BREAKING)
+    // METODE SAKTI CETAK PDF NATIVE BROWSER (ANTI-CRASH)
     function downloadPDF() {
       const element = document.getElementById('printable-area');
       
@@ -510,7 +548,7 @@
       
       windowCetak.document.write('<html><head><title>Laporan Absensi Guru - ' + new Date().toISOString().slice(0,10) + '</title>');
       windowCetak.document.write('<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">');
-      windowCetak.document.write('<style>@page { size: A4 portrait; margin: 20mm; } body { font-family: sans-serif; background: white; color: #000; }</style></head>');
+      windowCetak.document.write('<style>@page { size: A4 portrait; margin: 20mm; } body { font-family: sans-serif; background: white; color: #000; } table { width:100%; border-collapse: collapse; } th, td { border: 1px solid #dee2e6; padding: 12px; text-align: left; }</style></head>');
       windowCetak.document.write('<body class="p-4">');
       windowCetak.document.write('<div class="text-center mb-4">');
       windowCetak.document.write('<h2 class="fw-bold">LAPORAN AKTIVITAS ABSENSI GURU</h2>');
