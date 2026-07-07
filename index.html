@@ -233,20 +233,42 @@
       </div>
 
       <div id="kepsek-monitoring" class="kepsek-tab-content space-y-4 md:space-y-6">
-        <h2 class="text-xl md:text-2xl font-bold text-slate-900"><i class="fa-solid fa-chart-pie mr-2 text-emerald-600"></i>Pemantauan Aktivitas</h2>
+        <h2 class="text-xl md:text-2xl font-bold text-slate-900"><i class="fa-solid fa-chart-pie mr-2 text-emerald-600"></i>Pemantauan Aktivitas & Analisis Kerja</h2>
+        
         <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
           <div class="bg-white p-3 md:p-4 rounded-xl border border-slate-200 shadow-sm"><p class="text-[10px] md:text-xs text-slate-500 font-semibold uppercase">Total Guru</p><p id="k-stat-total" class="text-lg md:text-2xl font-bold text-slate-900 mt-1">0</p></div>
           <div class="bg-white p-3 md:p-4 rounded-xl border border-slate-200 shadow-sm"><p class="text-[10px] md:text-xs text-slate-500 font-semibold uppercase">Hadir</p><p id="k-stat-hadir" class="text-lg md:text-2xl font-bold text-emerald-600 mt-1">0</p></div>
           <div class="bg-white p-3 md:p-4 rounded-xl border border-slate-200 shadow-sm"><p class="text-[10px] md:text-xs text-slate-500 font-semibold uppercase">Terlambat</p><p id="k-stat-lambat" class="text-lg md:text-2xl font-bold text-amber-600 mt-1">0</p></div>
           <div class="bg-white p-3 md:p-4 rounded-xl border border-slate-200 shadow-sm"><p class="text-[10px] md:text-xs text-slate-500 font-semibold uppercase">Pulang</p><p id="k-stat-pulang" class="text-lg md:text-2xl font-bold text-blue-600 mt-1">0</p></div>
         </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="bg-gradient-to-br from-emerald-50 to-emerald-100 p-4 rounded-2xl border border-emerald-200 flex items-center gap-4">
+            <div class="p-3 bg-emerald-600 text-white rounded-xl text-xl"><i class="fa-solid fa-trophy"></i></div>
+            <div>
+              <p class="text-xs font-bold text-emerald-800 uppercase tracking-wide">Guru Paling Disiplin</p>
+              <p id="top-disiplin-nama" class="text-base font-bold text-slate-900 mt-0.5">Menganalisis data...</p>
+              <p id="top-disiplin-skor" class="text-xs text-emerald-700 font-medium"></p>
+            </div>
+          </div>
+          <div class="bg-gradient-to-br from-amber-50 to-amber-100 p-4 rounded-2xl border border-amber-200 flex items-center gap-4">
+            <div class="p-3 bg-amber-600 text-white rounded-xl text-xl"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            <div>
+              <p class="text-xs font-bold text-amber-800 uppercase tracking-wide">Butuh Pembinaan Keterlambatan</p>
+              <p id="top-lambat-nama" class="text-base font-bold text-slate-900 mt-0.5">Menganalisis data...</p>
+              <p id="top-lambat-skor" class="text-xs text-amber-700 font-medium"></p>
+            </div>
+          </div>
+        </div>
+
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
           <div class="bg-white p-4 md:p-6 rounded-2xl shadow-sm border border-slate-200">
-            <div class="h-48 md:h-56"><canvas id="kepsekChart"></canvas></div>
+            <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4"><i class="fa-solid fa-chart-line mr-1 text-emerald-600"></i>Grafik Tren Kehadiran (7 Log Terakhir)</h3>
+            <div class="h-56 md:h-64"><canvas id="kepsekChart"></canvas></div>
           </div>
           <div class="bg-white p-4 md:p-6 rounded-2xl shadow-sm border border-slate-200 lg:col-span-2">
             <h3 class="text-xs md:text-sm font-bold text-slate-500 uppercase tracking-wider mb-4">Feed Live Absensi Hari Ini</h3>
-            <div class="overflow-y-auto max-h-56 border rounded-xl">
+            <div class="overflow-y-auto max-h-64 border rounded-xl">
               <table class="w-full text-left text-xs md:text-sm border-collapse">
                 <tbody id="kepsek-table-log" class="divide-y divide-slate-100"></tbody>
               </table>
@@ -403,6 +425,19 @@
       let hitungTerlambat = 0;
       let hitungPulang = 0;
 
+      // Peta agregasi untuk analisis akumulasi (Reward & Punishment)
+      const guruSkorDisiplin = {}; 
+      const guruSkorTerlambat = {};
+      
+      // Petakan dulu semua nama guru dari database biar nama yang muncul valid
+      res.gurus.forEach(g => {
+        guruSkorDisiplin[g.nip] = { nama: g.nama, total: 0 };
+        guruSkorTerlambat[g.nip] = { nama: g.nama, total: 0 };
+      });
+
+      // Peta log harian untuk hitung grafik tren tanggal
+      const trenHarianLog = {};
+
       const grupLog = {};
       res.logs.forEach(l => {
         const bagianWaktu = l.timestamp.split(' ');
@@ -421,14 +456,22 @@
           };
         }
         
+        if (!trenHarianLog[tanggal]) {
+          trenHarianLog[tanggal] = { tepat: 0, terlambat: 0 };
+        }
+        
         const tipeKecil = l.tipe.toLowerCase();
         if (tipeKecil === "masuk") {
           grupLog[key].jamMasuk = jam;
           const jamMenitAbsen = jam.substring(0, 5);
           if (jamMenitAbsen > configMasukRaw) {
             grupLog[key].statusKet = "Terlambat";
+            trenHarianLog[tanggal].terlambat++;
+            if (guruSkorTerlambat[l.nip]) guruSkorTerlambat[l.nip].total++;
           } else {
             grupLog[key].statusKet = "Tepat Waktu";
+            trenHarianLog[tanggal].tepat++;
+            if (guruSkorDisiplin[l.nip]) guruSkorDisiplin[l.nip].total++;
           }
         } else if (tipeKecil === "pulang") {
           grupLog[key].jamPulang = jam;
@@ -445,6 +488,25 @@
       });
 
       let totalHadirHariIni = hitungHadirTepatWaktu + hitungTerlambat;
+
+      // PROSES PINDAI SKOR REWARD & PUNISHMENT (MENCARI NILAI TERTINGGI)
+      let namaTopDisiplin = "Belum Ada Data";
+      let skorTopDisiplin = 0;
+      Object.entries(guruSkorDisiplin).forEach(([nip, item]) => {
+        if (item.total > skorTopDisiplin) {
+          skorTopDisiplin = item.total;
+          namaTopDisiplin = item.nama;
+        }
+      });
+
+      let namaTopTerlambat = "Semua Guru Disiplin";
+      let skorTopTerlambat = 0;
+      Object.entries(guruSkorTerlambat).forEach(([nip, item]) => {
+        if (item.total > skorTopTerlambat) {
+          skorTopTerlambat = item.total;
+          namaTopTerlambat = item.nama;
+        }
+      });
 
       if(userRole === 'admin') {
         document.getElementById("stat-total").innerText = res.stats.totalGuru;
@@ -488,13 +550,20 @@
         });
 
         let belumAbsenAdmin = res.stats.totalGuru - totalHadirHariIni;
-        renderChart('chartKehadiran', 'admin', hitungHadirTepatWaktu, hitungTerlambat, belumAbsenAdmin < 0 ? 0 : belumAbsenAdmin);
+        renderAdminDoughnutChart(hitungHadirTepatWaktu, hitungTerlambat, belumAbsenAdmin < 0 ? 0 : belumAbsenAdmin);
       
       } else if(userRole === 'kepsek') {
         document.getElementById("k-stat-total").innerText = res.stats.totalGuru;
         document.getElementById("k-stat-hadir").innerText = hitungHadirTepatWaktu;
         document.getElementById("k-stat-lambat").innerText = hitungTerlambat;
         document.getElementById("k-stat-pulang").innerText = hitungPulang;
+
+        // ISI DATA WIDGET STRATEGIS KEPSEK
+        document.getElementById("top-disiplin-nama").innerText = namaTopDisiplin;
+        document.getElementById("top-disiplin-skor").innerText = skorTopDisiplin > 0 ? `Hadir tepat waktu sebanyak ${skorTopDisiplin} kali` : "Belum terdeteksi record kehadiran";
+        
+        document.getElementById("top-lambat-nama").innerText = namaTopTerlambat;
+        document.getElementById("top-lambat-skor").innerText = skorTopTerlambat > 0 ? `Terdeteksi terlambat sebanyak ${skorTopTerlambat} kali` : "Semua staf hadir sebelum jam masuk";
 
         const dropdown = document.getElementById("mentoring-guru");
         dropdown.innerHTML = `<option value="">-- Pilih Guru Sasaran --</option>`;
@@ -531,8 +600,17 @@
           });
         }
 
-        let belumAbsenKepsek = res.stats.totalGuru - totalHadirHariIni;
-        renderChart('kepsekChart', 'kepsek', hitungHadirTepatWaktu, hitungTerlambat, belumAbsenKepsek < 0 ? 0 : belumAbsenKepsek);
+        // GENERATE DATA UNTUK TREN KEPSEK LINE CHART (7 LOG TERAKHIR)
+        const sortedTanggal = Object.keys(trenHarianLog).sort().slice(-7);
+        const dataTepatWaktu = [];
+        const dataTerlambat = [];
+        
+        sortedTanggal.forEach(tgl => {
+          dataTepatWaktu.push(trenHarianLog[tgl].tepat);
+          dataTerlambat.push(trenHarianLog[tgl].terlambat);
+        });
+
+        renderKepsekLineChart(sortedTanggal, dataTepatWaktu, dataTerlambat);
       }
     }
 
@@ -623,25 +701,70 @@
       });
     }
 
-    function renderChart(canvasId, tipeRole, tepat, lambat, tidakHadir) {
-      const el = document.getElementById(canvasId);
+    // FUNGSI GRAFIK 1: Doughnut Chart Sisi Admin (Fokus Data Hari Ini)
+    function renderAdminDoughnutChart(tepat, lambat, tidakHadir) {
+      const el = document.getElementById('chartKehadiran');
       if (!el) return;
-      const ctx = el.getContext('2d');
+      if (chartInstance) chartInstance.destroy();
       
-      if (tipeRole === 'admin' && chartInstance) { chartInstance.destroy(); chartInstance = null; }
-      if (tipeRole === 'kepsek' && kChartInstance) { kChartInstance.destroy(); kChartInstance = null; }
-      
-      const configChart = {
+      chartInstance = new Chart(el.getContext('2d'), {
         type: 'doughnut',
         data: {
           labels: ['Tepat Waktu', 'Terlambat', 'Belum Absen'],
           datasets: [{ data: [tepat, lambat, tidakHadir], backgroundColor: ['#10b981', '#f59e0b', '#cbd5e1'], borderWidth: 0 }]
         },
         options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } } } }
-      };
+      });
+    }
 
-      if (tipeRole === 'admin') chartInstance = new Chart(ctx, configChart);
-      if (tipeRole === 'kepsek') kChartInstance = new Chart(ctx, configChart);
+    // FUNGSI GRAFIK 2: Line Chart Sisi Kepsek (Analisis Tren Berkala)
+    function renderKepsekLineChart(labelTanggal, datasetTepat, datasetLambat) {
+      const el = document.getElementById('kepsekChart');
+      if (!el) return;
+      if (kChartInstance) kChartInstance.destroy();
+
+      if (labelTanggal.length === 0) {
+        labelTanggal = ["Belum Ada Log"];
+        datasetTepat = [0];
+        datasetLambat = [0];
+      }
+
+      kChartInstance = new Chart(el.getContext('2d'), {
+        type: 'line',
+        data: {
+          labels: labelTanggal,
+          datasets: [
+            {
+              label: 'Tepat Waktu',
+              data: datasetTepat,
+              borderColor: '#10b981',
+              backgroundColor: 'rgba(16, 185, 129, 0.1)',
+              fill: true,
+              tension: 0.3,
+              borderWidth: 3
+            },
+            {
+              label: 'Terlambat',
+              data: datasetLambat,
+              borderColor: '#f59e0b',
+              backgroundColor: 'rgba(245, 158, 11, 0.1)',
+              fill: true,
+              tension: 0.3,
+              borderWidth: 3
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 10 } } }
+          },
+          scales: {
+            y: { beginAtZero: true, ticks: { precision: 0 } }
+          }
+        }
+      });
     }
 
     function startScanner() {
