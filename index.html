@@ -12,7 +12,6 @@
 </head>
 <body class="bg-slate-100 font-sans text-slate-800 antialiased">
 
-  <!-- PAGE LOGIN -->
   <div id="page-login" class="min-h-screen flex items-center justify-center px-4 py-8">
     <div class="bg-white p-6 sm:p-8 rounded-2xl shadow-xl w-full max-w-md border border-slate-200">
       <div class="text-center mb-6">
@@ -48,7 +47,6 @@
     </div>
   </div>
 
-  <!-- PANEL ADMIN -->
   <div id="page-admin" class="min-h-screen flex flex-col md:flex-row hidden">
     <div class="w-full md:w-64 bg-slate-900 text-white flex flex-col shrink-0">
       <div class="p-4 md:p-5 border-b border-slate-800 flex items-center justify-between md:justify-start gap-3">
@@ -77,7 +75,6 @@
          <button onclick="logout()" class="bg-red-500 text-white px-3 py-1.5 rounded-xl text-xs font-medium flex items-center gap-1"><i class="fa-solid fa-right-from-bracket"></i> Keluar</button>
       </div>
 
-      <!-- TAB SCAN & INPUT MANUAL -->
       <div id="tab-scan" class="admin-tab-content space-y-4 md:space-y-6">
         <h2 class="text-xl md:text-2xl font-bold text-slate-900"><i class="fa-solid fa-qrcode mr-2 text-blue-600"></i>Pencatatan Kehadiran</h2>
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
@@ -106,8 +103,10 @@
                 </select>
               </div>
               <div>
-                <label class="block text-xs font-semibold text-slate-600 mb-1">Nomor Induk Pegawai (NIP)</label>
-                <input type="text" id="manual-nip" required placeholder="Masukkan NIP" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs md:text-sm">
+                <label class="block text-xs font-semibold text-slate-600 mb-1">Nama Guru (Pilih/Cari)</label>
+                <select id="manual-nip" required class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs md:text-sm font-medium">
+                  <option value="">-- Cari / Pilih Nama Guru --</option>
+                </select>
               </div>
               <button type="submit" class="w-full bg-blue-600 text-white font-medium py-2.5 rounded-xl text-xs md:text-sm hover:bg-blue-700 transition">Kirim Data Absensi</button>
             </form>
@@ -116,7 +115,6 @@
         </div>
       </div>
 
-      <!-- TAB LAPORAN -->
       <div id="tab-laporan" class="admin-tab-content space-y-4 md:space-y-6 hidden">
         <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
           <div class="space-y-1">
@@ -168,7 +166,6 @@
         </div>
       </div>
 
-      <!-- TAB GURU -->
       <div id="tab-guru" class="admin-tab-content space-y-4 md:space-y-6 hidden">
         <h2 class="text-xl md:text-2xl font-bold text-slate-900"><i class="fa-solid fa-users mr-2 text-blue-600"></i>Manajemen Data Guru</h2>
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
@@ -199,7 +196,6 @@
         </div>
       </div>
 
-      <!-- TAB CONFIG -->
       <div id="tab-pengaturan" class="admin-tab-content space-y-4 md:space-y-6 hidden">
         <h2 class="text-xl md:text-2xl font-bold text-slate-900"><i class="fa-solid fa-sliders mr-2 text-blue-600"></i>Pengaturan Umum Instansi</h2>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -224,7 +220,6 @@
     </div>
   </div>
 
-  <!-- PANEL KEPSEK -->
   <div id="page-kepsek" class="min-h-screen flex flex-col md:flex-row hidden">
     <div class="w-full md:w-64 bg-slate-900 text-white flex flex-col shrink-0">
       <div class="p-4 md:p-5 border-b border-slate-800 flex items-center justify-between md:justify-start gap-3">
@@ -301,7 +296,6 @@
         </div>
       </div>
 
-      <!-- KEPSEK MENTORING -->
       <div id="kepsek-mentoring" class="kepsek-tab-content space-y-4 md:space-y-6 hidden">
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
           <h2 class="text-xl font-bold text-slate-900"><i class="fa-solid fa-chalkboard-user mr-2 text-emerald-600"></i>Panel Evaluasi & Mentoring</h2>
@@ -336,7 +330,6 @@
     </div>
   </div>
 
-  <!-- QR MODAL -->
   <div id="qr-modal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center hidden px-4">
     <div class="bg-white p-5 rounded-2xl max-w-sm w-full text-center space-y-4 border border-slate-200">
       <h3 class="text-base font-bold text-slate-900">Kartu Digital Absensi</h3>
@@ -352,7 +345,6 @@
     </div>
   </div>
 
-  <!-- CORE SCRIPTS -->
   <script>
     const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxfB8YGDrH6NyETVTK-gQdChTK8BIQY21-k7v7OWMNYwvL0UsqLjlYz83yn2PefwpKq/exec";
 
@@ -360,6 +352,7 @@
     let userRole = '', userName = '';
     let globalConfigMasuk = "07:00", globalConfigPulang = "14:00", globalNamaSekolah = "", globalAlamatSekolah = "";
     let rawLogsCache = []; 
+    let databaseGuruGlobal = [], mentoringLogsCache = [], totalGuruCache = 0;
 
     async function panggilAPI(fungsiName, argumenArray = []) {
       try {
@@ -419,7 +412,6 @@
       icon.classList.remove('animate-spin');
     }
 
-    // Default Filter set ke Hari ini
     function setDefaultDateFilter() {
       const hariIniStr = new Date().toISOString().split('T')[0];
       if(!document.getElementById("filter-start-date").value) {
@@ -434,7 +426,6 @@
 
       rawLogsCache = res.logs || [];
 
-      // Parsing Config Jam & Kop Surat
       globalConfigMasuk = (res.config.Jam_Masuk || "07:00").substring(0, 5);
       globalConfigPulang = (res.config.Jam_Pulang || "14:00").substring(0, 5);
       globalNamaSekolah = res.config.Nama_Sekolah || "E-Absensi Sekolah";
@@ -452,12 +443,19 @@
       processAndRenderUI({ gurus: databaseGuruGlobal || [], mentoringLogs: mentoringLogsCache || [], stats: { totalGuru: totalGuruCache || 0 } });
     }
 
-    let databaseGuruGlobal = [], mentoringLogsCache = [], totalGuruCache = 0;
-
     function processAndRenderUI(res) {
       if(res.gurus) databaseGuruGlobal = res.gurus;
       if(res.mentoringLogs) mentoringLogsCache = res.mentoringLogs;
       if(res.stats) totalGuruCache = res.stats.totalGuru;
+
+      // UPDATE: Merender daftar nama guru secara otomatis ke dalam dropdown input manual admin
+      const manualNipSelect = document.getElementById("manual-nip");
+      if(manualNipSelect && databaseGuruGlobal.length > 0) {
+        manualNipSelect.innerHTML = `<option value="">-- Cari / Pilih Nama Guru --</option>`;
+        databaseGuruGlobal.forEach(g => {
+          manualNipSelect.innerHTML += `<option value="${g.nip}">${g.nama} (${g.nip})</option>`;
+        });
+      }
 
       const startDate = document.getElementById("filter-start-date").value;
       const endDate = document.getElementById("filter-end-date").value;
@@ -553,7 +551,7 @@
 
       } else if (userRole === "kepsek") {
         document.getElementById("k-stat-total").innerText = totalGuruCache;
-        document.getElementById("k-stat-hadir").innerText = hitpm = hitungTepat;
+        document.getElementById("k-stat-hadir").innerText = hitungTepat;
         document.getElementById("k-stat-lambat").innerText = hitungLambat;
         document.getElementById("k-stat-pulang").innerText = rawLogsCache.filter(x => x.tipe.toLowerCase() === "pulang").length;
 
@@ -631,13 +629,16 @@
     function handleAbsenManual(e) {
       e.preventDefault();
       const tipe = document.getElementById("manual-tipe").value;
+      const nip = document.getElementById("manual-nip").value;
+      if(!nip) return alert("Silakan pilih nama guru terlebih dahulu!");
+
       if (tipe.toLowerCase() === "pulang") {
         const jamSekarang = new Date().toLocaleTimeString('id-ID', {hour: '2-digit', minute: '2-digit'});
         if (jamSekarang < globalConfigPulang) {
           if (!confirm("⚠️ Belum memasuki jam pulang resmi (" + globalConfigPulang + "). Lanjutkan?")) return;
         }
       }
-      prosesAbsensiData(document.getElementById("manual-nip").value, tipe);
+      prosesAbsensiData(nip, tipe);
     }
 
     async function prosesAbsensiData(nip, tipe) {
